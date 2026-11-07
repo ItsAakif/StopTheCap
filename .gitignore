@@ -1,0 +1,63 @@
+﻿# data (never commit source or derived data)
+datasets/raw/
+datasets/canonical/
+datasets/splits/*.parquet
+datasets/splits/*.jsonl
+reports/*.json
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+*.egg-info/
+
+# notebooks / checkpoints
+ml/**/checkpoints/
+*.ckpt
+*.pt
+*.onnx
+.ipynb_checkpoints/
+
+# env
+.env
+*.local
+
+# third-party evidence data (re-downloadable by the scripts in the same folder)
+research/_evidence/*.csv
+research/_evidence/*.jsonl
+
+# scratch analysis artefacts
+_*.json
+_*.py
+
+# training artefacts (never commit weights)
+checkpoints/
+
+# cloud measurement evidence IS committed (small JSON, no data)
+!reports/cloud/*.json
+
+# the checkpoint drop folder (752 MB of weights - never commit)
+/E1/
+
+# build artefacts and derived prediction caches (regenerate, never commit)
+StopTheCap.zip
+reports/e1/predictions.jsonl
+
+# candidate corpus downloads (large, never commit)
+datasets/raw/aitextpile/
+datasets/raw/aiga/
+datasets/raw/e2c1_api/
+datasets/raw/e2c1_generated/
+
+# agent-only working material (never published)
+.planning/
+research/
+
+# scratch
+out.txt
+*.zip
+
+# tooling caches
+.mypy_cache/
+.ruff_cache/

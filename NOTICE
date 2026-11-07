@@ -1,0 +1,32 @@
+﻿StopTheCap
+Copyright 2026 the StopTheCap contributors
+
+This product includes material developed by third parties.
+
+Code
+    The source code in this repository is licensed under the Apache License,
+    Version 2.0. See LICENSE.
+
+Prompt data
+    datasets/manifests/e2_c1_prompts.jsonl contains text from English
+    Wikipedia, licensed CC BY-SA 4.0. Every record carries its own
+    attribution, source title, revision id and permanent URL. The Apache-2.0
+    licence does not apply to this file.
+
+Evaluation and source datasets
+    E1 was trained on Ghostbuster (CC BY 3.0) and evaluated on HC3
+    (CC BY-SA 4.0) and RAID (MIT). The raw and canonical records of those
+    datasets are NOT distributed in this repository. Counts, digests and
+    evaluation results are.
+
+Model weights
+    DistilBERT (Apache-2.0), Mistral-7B-Instruct-v0.2 (Apache-2.0) and
+    Llama-3.2-3B-Instruct (Llama 3.2 Community License) are referenced as
+    dependencies. No model weights are distributed in this repository.
+
+Generated text
+    No generated corpus is distributed. Text produced by the generators is
+    not licensed by their weight licences and is not covered by the
+    Apache-2.0 grant on the code.
+
+See DATA_LICENCES.md for the full layering.

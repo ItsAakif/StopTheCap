@@ -1,0 +1,530 @@
+{
+  "checkpoint": "/content/drive/MyDrive/StopTheCap_runs/E1/ckpt/last.pt",
+  "model": "distilbert-base-cased",
+  "device": "cuda",
+  "max_length": 512,
+  "frozen_threshold": 0.045211684051900694,
+  "threshold_basis": "quantile(0.95) of 202 human val scores",
+  "split_digest": "932d20f1dca64c21537bed89739c633ace1b627c1a25f7d78c45a17915cf27a2",
+  "timing": {
+    "threshold_pass_s": 22.58,
+    "total_s": 331.9
+  },
+  "splits": [
+    {
+      "name": "val",
+      "n": 1401,
+      "n_pos": 1199,
+      "n_neg": 202,
+      "roc_auc": 0.9987406997580492,
+      "pr_auc": 0.9997873935281645,
+      "auc_ci": {
+        "point": 0.9987406997580492,
+        "lo": 0.997402744861642,
+        "hi": 0.999756604100777,
+        "n_boot": 1000
+      },
+      "human_fpr": 0.054455445544554455,
+      "human_fpr_ci": [
+        0.03067550195350162,
+        0.09486569088604103
+      ],
+      "precision": 0.9908789386401327,
+      "recall": 0.9966638865721434,
+      "f1": 0.9937629937629938,
+      "confusion": {
+        "tn": 191,
+        "fp": 11,
+        "fn": 4,
+        "tp": 1195
+      },
+      "brier": 0.00678788155108116,
+      "ece": 0.0073825991335988855,
+      "reliability": [
+        {
+          "lo": 0.0,
+          "hi": 0.1,
+          "n": 196,
+          "mean_pred": 0.0006,
+          "frac_pos": 0.0204
+        },
+        {
+          "lo": 0.1,
+          "hi": 0.2,
+          "n": 2,
+          "mean_pred": 0.1703,
+          "frac_pos": 0.0
+        },
+        {
+          "lo": 0.2,
+          "hi": 0.3,
+          "n": 0,
+          "mean_pred": null,
+          "frac_pos": null
+        },
+        {
+          "lo": 0.3,
+          "hi": 0.4,
+          "n": 1,
+          "mean_pred": 0.3295,
+          "frac_pos": 0.0
+        },
+        {
+          "lo": 0.4,
+          "hi": 0.5,
+          "n": 0,
+          "mean_pred": null,
+          "frac_pos": null
+        },
+        {
+          "lo": 0.5,
+          "hi": 0.6,
+          "n": 0,
+          "mean_pred": null,
+          "frac_pos": null
+        },
+        {
+          "lo": 0.6,
+          "hi": 0.7,
+          "n": 2,
+          "mean_pred": 0.6676,
+          "frac_pos": 0.0
+        },
+        {
+          "lo": 0.7,
+          "hi": 0.8,
+          "n": 1,
+          "mean_pred": 0.7985,
+          "frac_pos": 1.0
+        },
+        {
+          "lo": 0.8,
+          "hi": 0.9,
+          "n": 3,
+          "mean_pred": 0.8208,
+          "frac_pos": 0.3333
+        },
+        {
+          "lo": 0.9,
+          "hi": 1.0,
+          "n": 1196,
+          "mean_pred": 0.9998,
+          "frac_pos": 0.9975
+        }
+      ],
+      "note": "only 202 negatives: threshold metrics are indicative"
+    },
+    {
+      "name": "test_id",
+      "n": 1518,
+      "n_pos": 1295,
+      "n_neg": 223,
+      "roc_auc": 0.9985248541302353,
+      "pr_auc": 0.9997551641005566,
+      "auc_ci": {
+        "point": 0.9985248541302353,
+        "lo": 0.9972015513271119,
+        "hi": 0.999480669009817,
+        "n_boot": 1000
+      },
+      "human_fpr": 0.03587443946188341,
+      "human_fpr_ci": [
+        0.01828797593287521,
+        0.06918098919521416
+      ],
+      "precision": 0.9938128383604021,
+      "recall": 0.9922779922779923,
+      "f1": 0.9930448222565688,
+      "confusion": {
+        "tn": 215,
+        "fp": 8,
+        "fn": 10,
+        "tp": 1285
+      },
+      "brier": 0.010625228732067855,
+      "ece": 0.011217006187867123,
+      "reliability": [
+        {
+          "lo": 0.0,
+          "hi": 0.1,
+          "n": 225,
+          "mean_pred": 0.0005,
+          "frac_pos": 0.0444
+        },
+        {
+          "lo": 0.1,
+          "hi": 0.2,
+          "n": 1,
+          "mean_pred": 0.1066,
+          "frac_pos": 0.0
+        },
+        {
+          "lo": 0.2,
+          "hi": 0.3,
+          "n": 3,
+          "mean_pred": 0.2476,
+          "frac_pos": 0.6667
+        },
+        {
+          "lo": 0.3,
+          "hi": 0.4,
+          "n": 1,
+          "mean_pred": 0.3234,
+          "frac_pos": 1.0
+        },
+        {
+          "lo": 0.4,
+          "hi": 0.5,
+          "n": 2,
+          "mean_pred": 0.4519,
+          "frac_pos": 0.0
+        },
+        {
+          "lo": 0.5,
+          "hi": 0.6,
+          "n": 0,
+          "mean_pred": null,
+          "frac_pos": null
+        },
+        {
+          "lo": 0.6,
+          "hi": 0.7,
+          "n": 0,
+          "mean_pred": null,
+          "frac_pos": null
+        },
+        {
+          "lo": 0.7,
+          "hi": 0.8,
+          "n": 1,
+          "mean_pred": 0.7553,
+          "frac_pos": 1.0
+        },
+        {
+          "lo": 0.8,
+          "hi": 0.9,
+          "n": 2,
+          "mean_pred": 0.8541,
+          "frac_pos": 1.0
+        },
+        {
+          "lo": 0.9,
+          "hi": 1.0,
+          "n": 1283,
+          "mean_pred": 0.9997,
+          "frac_pos": 0.9969
+        }
+      ],
+      "note": "only 223 negatives: threshold metrics are indicative"
+    },
+    {
+      "name": "test_ood_domain",
+      "n": 6976,
+      "n_pos": 5998,
+      "n_neg": 978,
+      "roc_auc": 0.979951565313864,
+      "pr_auc": 0.9967510362632012,
+      "auc_ci": {
+        "point": 0.979951565313864,
+        "lo": 0.9770347976421587,
+        "hi": 0.9826258250023355,
+        "n_boot": 1000
+      },
+      "human_fpr": 0.05521472392638037,
+      "human_fpr_ci": [
+        0.042562791940751604,
+        0.0713472318349776
+      ],
+      "precision": 0.9903416204614559,
+      "recall": 0.9231410470156719,
+      "f1": 0.9555613081370264,
+      "confusion": {
+        "tn": 924,
+        "fp": 54,
+        "fn": 461,
+        "tp": 5537
+      },
+      "brier": 0.08328956647390673,
+      "ece": 0.08609123182278682,
+      "reliability": [
+        {
+          "lo": 0.0,
+          "hi": 0.1,
+          "n": 1434,
+          "mean_pred": 0.0051,
+          "frac_pos": 0.3473
+        },
+        {
+          "lo": 0.1,
+          "hi": 0.2,
+          "n": 30,
+          "mean_pred": 0.1501,
+          "frac_pos": 0.9667
+        },
+        {
+          "lo": 0.2,
+          "hi": 0.3,
+          "n": 27,
+          "mean_pred": 0.2466,
+          "frac_pos": 0.963
+        },
+        {
+          "lo": 0.3,
+          "hi": 0.4,
+          "n": 29,
+          "mean_pred": 0.3467,
+          "frac_pos": 0.931
+        },
+        {
+          "lo": 0.4,
+          "hi": 0.5,
+          "n": 17,
+          "mean_pred": 0.4423,
+          "frac_pos": 0.8824
+        },
+        {
+          "lo": 0.5,
+          "hi": 0.6,
+          "n": 15,
+          "mean_pred": 0.5426,
+          "frac_pos": 1.0
+        },
+        {
+          "lo": 0.6,
+          "hi": 0.7,
+          "n": 20,
+          "mean_pred": 0.6502,
+          "frac_pos": 0.95
+        },
+        {
+          "lo": 0.7,
+          "hi": 0.8,
+          "n": 25,
+          "mean_pred": 0.7449,
+          "frac_pos": 0.96
+        },
+        {
+          "lo": 0.8,
+          "hi": 0.9,
+          "n": 44,
+          "mean_pred": 0.8619,
+          "frac_pos": 0.9091
+        },
+        {
+          "lo": 0.9,
+          "hi": 1.0,
+          "n": 5335,
+          "mean_pred": 0.9984,
+          "frac_pos": 0.9944
+        }
+      ],
+      "note": "only 978 negatives: threshold metrics are indicative"
+    },
+    {
+      "name": "hc3",
+      "n": 6575,
+      "n_pos": 2418,
+      "n_neg": 4157,
+      "roc_auc": 0.8165854957197969,
+      "pr_auc": 0.7252225344850797,
+      "auc_ci": {
+        "point": 0.8165854957197969,
+        "lo": 0.806805177590173,
+        "hi": 0.826806603230164,
+        "n_boot": 1000
+      },
+      "human_fpr": 0.11161895597786865,
+      "human_fpr_ci": [
+        0.10240253667471283,
+        0.12155254010590771
+      ],
+      "precision": 0.7114427860696517,
+      "recall": 0.4731182795698925,
+      "f1": 0.5683060109289617,
+      "confusion": {
+        "tn": 3693,
+        "fp": 464,
+        "fn": 1274,
+        "tp": 1144
+      },
+      "brier": 0.2498218542973776,
+      "ece": 0.23894375655264288,
+      "reliability": [
+        {
+          "lo": 0.0,
+          "hi": 0.1,
+          "n": 5108,
+          "mean_pred": 0.0041,
+          "frac_pos": 0.2651
+        },
+        {
+          "lo": 0.1,
+          "hi": 0.2,
+          "n": 146,
+          "mean_pred": 0.1462,
+          "frac_pos": 0.5137
+        },
+        {
+          "lo": 0.2,
+          "hi": 0.3,
+          "n": 83,
+          "mean_pred": 0.2461,
+          "frac_pos": 0.5542
+        },
+        {
+          "lo": 0.3,
+          "hi": 0.4,
+          "n": 78,
+          "mean_pred": 0.36,
+          "frac_pos": 0.4744
+        },
+        {
+          "lo": 0.4,
+          "hi": 0.5,
+          "n": 59,
+          "mean_pred": 0.45,
+          "frac_pos": 0.5763
+        },
+        {
+          "lo": 0.5,
+          "hi": 0.6,
+          "n": 57,
+          "mean_pred": 0.5508,
+          "frac_pos": 0.614
+        },
+        {
+          "lo": 0.6,
+          "hi": 0.7,
+          "n": 67,
+          "mean_pred": 0.6523,
+          "frac_pos": 0.5821
+        },
+        {
+          "lo": 0.7,
+          "hi": 0.8,
+          "n": 74,
+          "mean_pred": 0.7531,
+          "frac_pos": 0.6622
+        },
+        {
+          "lo": 0.8,
+          "hi": 0.9,
+          "n": 98,
+          "mean_pred": 0.8583,
+          "frac_pos": 0.6837
+        },
+        {
+          "lo": 0.9,
+          "hi": 1.0,
+          "n": 805,
+          "mean_pred": 0.9841,
+          "frac_pos": 0.8472
+        }
+      ],
+      "note": ""
+    },
+    {
+      "name": "raid",
+      "n": 1972,
+      "n_pos": 1811,
+      "n_neg": 161,
+      "roc_auc": 0.5323900525086515,
+      "pr_auc": 0.939316032757464,
+      "auc_ci": {
+        "point": 0.5323900525086515,
+        "lo": 0.4932130167266292,
+        "hi": 0.5755745170130088,
+        "n_boot": 1000
+      },
+      "human_fpr": 0.4906832298136646,
+      "human_fpr_ci": [
+        0.41458375517182944,
+        0.5672169553284327
+      ],
+      "precision": 0.9105322763306908,
+      "recall": 0.4439536167863059,
+      "f1": 0.5968819599109132,
+      "confusion": {
+        "tn": 82,
+        "fp": 79,
+        "fn": 1007,
+        "tp": 804
+      },
+      "brier": 0.5676040129281592,
+      "ece": 0.5744254689102647,
+      "reliability": [
+        {
+          "lo": 0.0,
+          "hi": 0.1,
+          "n": 1102,
+          "mean_pred": 0.0022,
+          "frac_pos": 0.9256
+        },
+        {
+          "lo": 0.1,
+          "hi": 0.2,
+          "n": 17,
+          "mean_pred": 0.1469,
+          "frac_pos": 0.9412
+        },
+        {
+          "lo": 0.2,
+          "hi": 0.3,
+          "n": 17,
+          "mean_pred": 0.2507,
+          "frac_pos": 0.9412
+        },
+        {
+          "lo": 0.3,
+          "hi": 0.4,
+          "n": 8,
+          "mean_pred": 0.3401,
+          "frac_pos": 1.0
+        },
+        {
+          "lo": 0.4,
+          "hi": 0.5,
+          "n": 5,
+          "mean_pred": 0.4524,
+          "frac_pos": 0.8
+        },
+        {
+          "lo": 0.5,
+          "hi": 0.6,
+          "n": 5,
+          "mean_pred": 0.5332,
+          "frac_pos": 1.0
+        },
+        {
+          "lo": 0.6,
+          "hi": 0.7,
+          "n": 9,
+          "mean_pred": 0.6169,
+          "frac_pos": 1.0
+        },
+        {
+          "lo": 0.7,
+          "hi": 0.8,
+          "n": 9,
+          "mean_pred": 0.7494,
+          "frac_pos": 1.0
+        },
+        {
+          "lo": 0.8,
+          "hi": 0.9,
+          "n": 18,
+          "mean_pred": 0.862,
+          "frac_pos": 1.0
+        },
+        {
+          "lo": 0.9,
+          "hi": 1.0,
+          "n": 782,
+          "mean_pred": 0.9954,
+          "frac_pos": 0.9028
+        }
+      ],
+      "note": "only 161 negatives: threshold metrics are indicative"
+    }
+  ]
+}

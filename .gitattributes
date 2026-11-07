@@ -1,0 +1,12 @@
+﻿# Normalise text files to LF; keep data files byte-exact across platforms.
+* text=auto eol=lf
+
+# Data artefacts are hashed byte-for-byte; never rewrite their line endings.
+*.jsonl -text
+*.json -text
+*.parquet binary
+*.pt binary
+*.safetensors binary
+
+# Manifest YAML is hashed byte-for-byte by tests; preserve exact bytes.
+datasets/manifests/*.yaml -text

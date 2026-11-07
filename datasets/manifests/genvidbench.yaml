@@ -1,0 +1,67 @@
+dataset_id: genvidbench
+display_name: "GenVidBench: A 6-Million Benchmark for AI-Generated Video Detection"
+enabled: true
+paper_url: https://arxiv.org/abs/2501.11340
+official_url: https://genvidbench.github.io
+retrieved_at: 2026-10-29
+access_method: http_download
+version:
+  kind: label_manifest
+  value: "Pair1_labels.txt + Pair2_labels.txt from HF jian-0/GenVidBench (media not downloaded)"
+  note: >
+    Milestone 1 ingests the benchmark's own label manifests only (8.05 MB). Media is
+    201 GB of RAR and multi-part 7z archives and is deliberately NOT downloaded:
+    the milestone proves schema and split behaviour, not pixels.
+licence:
+  spdx: CC-BY-NC-4.0
+  evidence_url: https://genvidbench.github.io
+  commercial_use: forbidden
+  redistribution: permitted_non_commercial_only
+  attribution_required: true
+  share_alike: false
+  verified_at: 2026-10-29
+  unresolved: true
+  unresolved_note: >
+    The Hugging Face dataset listing carries NO licence tag; the official project
+    site states CC BY-NC 4.0. The benchmark licence may not grant redistribution
+    rights over every underlying video, which come from Vript, HD-VG-130M and
+    VidProM (the official site states real videos cannot be provided directly
+    "due to copyright restrictions"). Treat media redistribution as NOT permitted
+    until clarified in writing.
+permitted_uses:
+  train: false          # media not obtained; see video_feasibility.md
+  internal_eval: true   # inventory-level only at Milestone 1
+  publish_weights: false
+  publish_manifest: true
+  redistribute_original: false
+  commercial: false
+tasks: [video_generated]
+modality: video
+role: video_inventory
+class_conventions:
+  generated_label_1: [ms, pika, t2vz, vc2, cogvideo, mora, musev, svd]
+  real_label_0: [vript, hd_vg_130m]
+verified_counts:
+  Pair1_labels.txt: {rows: 74135, generated: 54004, real: 20131}
+  Pair2_labels.txt: {rows: 67860, generated: 54444, real: 13416}
+archive_sizes_mb:
+  "6.7m/OpenAI_Sora.zip": 468
+  "6.7m/keling.zip": 1315
+  "6.7m/OpenSora_13800.tar.gz": 2989
+  "Pair1/ms.rar": 2623
+  "Pair1/t2vz.rar": 5025
+  "Pair1/vc2.rar": 8051
+  "Pair1/pika.rar": 7989
+  "Pair1/vript.rar": 46912
+  "Pair2/svd.rar": 4258
+  "Pair2/mora.rar": 5333
+  "Pair2/cogvideo.rar": 3760
+  "Pair2/musev.rar": 24783
+  "hd_vg_130m.7z.001-004": 76313
+known_issues:
+  - "Non-commercial licence: any model trained on this media cannot back a commercial product."
+  - "Media is 201 GB in RAR and multi-part 7z archives which cannot be partially extracted; the real-video archives are the largest (vript 46.9 GB, hd_vg 76.3 GB)."
+  - "Real and generated classes come from different source corpora, so content differs between classes -- a potential shortcut. Any pilot must measure a content-controlled baseline."
+  - "Fully AI-generated video and manipulated/deepfake video are separate tasks; DFDC must not be merged with this."
+notes: >
+  Mandatory v1 workstream, but gated: inventory now, media pilot after the text audit.

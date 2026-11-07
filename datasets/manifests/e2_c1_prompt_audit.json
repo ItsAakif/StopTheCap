@@ -1,0 +1,172 @@
+{
+  "cache_hits": 482,
+  "elapsed_s": 1683.263,
+  "exclusions": {
+    "duplicate": 0,
+    "length": 10628,
+    "no_extract": 202,
+    "no_revision": 0,
+    "non_latin": 23,
+    "parser_reject": 11018,
+    "safety:excluded_biography": 9280,
+    "safety:excluded_blocklist": 109,
+    "safety:excluded_disambiguation": 5,
+    "safety:excluded_list": 61,
+    "safety:excluded_quote_heavy": 388
+  },
+  "generated_at": "2026-11-06T15:20:55Z",
+  "input": {
+    "retrieved_at": "2026-11-06",
+    "seeds": [
+      "0",
+      "A",
+      "B",
+      "C",
+      "D",
+      "E",
+      "F",
+      "G",
+      "H",
+      "I",
+      "J",
+      "K",
+      "L",
+      "M",
+      "N",
+      "O",
+      "P",
+      "Q",
+      "R",
+      "S",
+      "T",
+      "U",
+      "V",
+      "W",
+      "X",
+      "Y",
+      "Z",
+      "Ba",
+      "Ca",
+      "Da",
+      "Fa",
+      "Ha",
+      "Ka",
+      "Ma",
+      "Na",
+      "Pa",
+      "Sa",
+      "Ta",
+      "Wa"
+    ],
+    "source": "wikipedia-api"
+  },
+  "maxlag": 0,
+  "mode": "wikitext",
+  "output": {
+    "count": 5000,
+    "path": "datasets\\manifests\\e2_c1_prompts.jsonl",
+    "sha256": "0c3c8b7a72196e2fc2d5454869a66bfcac8b785c19f8cc619c59d95892b6788a"
+  },
+  "pages_fetched": 5088,
+  "pages_per_request": 15.372,
+  "pages_seen": 38216,
+  "paragraphs_seen": 26996,
+  "parser_rejects": 11018,
+  "pipeline_version": "e2c1-prompts-v1",
+  "rate429": 47,
+  "reconciliation": {
+    "balanced": true,
+    "pages_seen": 38216,
+    "removed": 33216,
+    "selected": 5000
+  },
+  "requests": 331,
+  "retries": 47,
+  "retrieved_at": "2026-11-06",
+  "safety_ruleset_version": "e2c1-safety-v1",
+  "schema_version": "1.0",
+  "selection": {
+    "candidates": 6502,
+    "n_requested": 5000,
+    "page_cap_removed": 1501,
+    "rank_cutoff_removed": 1,
+    "rank_seed": "e2c1-selection-2026-11-06",
+    "selected": 5000
+  },
+  "stages": [
+    {
+      "in": 38216,
+      "out": 38216,
+      "removed": 0,
+      "stage": "pages_seen"
+    },
+    {
+      "in": 38216,
+      "out": 27198,
+      "removed": 11018,
+      "stage": "parser_reject"
+    },
+    {
+      "in": 27198,
+      "out": 26996,
+      "removed": 202,
+      "stage": "no_extract"
+    },
+    {
+      "in": 26996,
+      "out": 16368,
+      "removed": 10628,
+      "stage": "length"
+    },
+    {
+      "in": 16368,
+      "out": 16345,
+      "removed": 23,
+      "stage": "non_latin"
+    },
+    {
+      "in": 16345,
+      "out": 7065,
+      "removed": 9280,
+      "stage": "safety:excluded_biography"
+    },
+    {
+      "in": 7065,
+      "out": 6956,
+      "removed": 109,
+      "stage": "safety:excluded_blocklist"
+    },
+    {
+      "in": 6956,
+      "out": 6951,
+      "removed": 5,
+      "stage": "safety:excluded_disambiguation"
+    },
+    {
+      "in": 6951,
+      "out": 6890,
+      "removed": 61,
+      "stage": "safety:excluded_list"
+    },
+    {
+      "in": 6890,
+      "out": 6502,
+      "removed": 388,
+      "stage": "safety:excluded_quote_heavy"
+    },
+    {
+      "in": 6502,
+      "out": 5001,
+      "removed": 1501,
+      "stage": "per_page_cap"
+    },
+    {
+      "in": 5001,
+      "out": 5000,
+      "removed": 1,
+      "stage": "rank_cutoff"
+    }
+  ],
+  "status": "ok",
+  "warnings": []
+}

@@ -1,0 +1,84 @@
+{
+  "experiment": "E1",
+  "smoke": false,
+  "smoke_steps": null,
+  "config": {
+    "experiment": "E1",
+    "model_name": "distilbert-base-cased",
+    "max_length": 512,
+    "epochs": 3,
+    "learning_rate": 5e-05,
+    "batch_size": 16,
+    "grad_accum": 2,
+    "weight_decay": 0.01,
+    "warmup_ratio": 0.06,
+    "fp16": true,
+    "seed": 42,
+    "imbalance": {
+      "strategy": "class_weighted_loss",
+      "compute_from_split": true
+    },
+    "threshold": {
+      "selection_split": "val",
+      "target_human_fpr": 0.05
+    },
+    "checkpoint": {
+      "dir": "checkpoints/E1",
+      "every_steps": 200,
+      "keep_last": 2,
+      "resume": true
+    },
+    "output": {
+      "report": "reports/E1_encoder.md",
+      "run_log": "reports/runs/E1.json",
+      "predictions": "reports/E1_predictions.jsonl"
+    },
+    "evaluation": {
+      "in_domain": [
+        "val",
+        "test_id"
+      ],
+      "independent": [
+        "quarantine"
+      ],
+      "report": [
+        "roc_auc",
+        "pr_auc",
+        "f1_at_threshold",
+        "human_fpr_with_ci",
+        "tpr_at_fpr",
+        "brier",
+        "ece",
+        "per_generator",
+        "per_domain"
+      ]
+    }
+  },
+  "environment": {
+    "python": "3.13.16",
+    "platform": "Linux-6.6.159+-x86_64-with-glibc2.39",
+    "torch": "2.11.0+cu130",
+    "torch_cuda_available": true,
+    "torch_cuda_device": "Tesla T4",
+    "transformers": "5.22.0",
+    "sklearn": "1.6.1",
+    "numpy": "2.4.6"
+  },
+  "train_class_weights": [
+    3.447742733457019,
+    0.5848106577153047
+  ],
+  "steps_completed": 2088,
+  "frozen_threshold": 0.045211683958768845,
+  "threshold_basis": "quantile on 202 human val scores",
+  "checkpoint": "/content/drive/MyDrive/StopTheCap_runs/E1/ckpt/last.pt",
+  "evaluation": {
+    "split": "test_id",
+    "n": 1518,
+    "n_neg": 223,
+    "roc_auc": 0.9985248541302353,
+    "human_fpr_at_threshold": 0.03587443946188341,
+    "caveat": "only 223 negatives; treat threshold metrics as indicative"
+  },
+  "status": "TRAINED -- evaluation against test_id/quarantine pending"
+}

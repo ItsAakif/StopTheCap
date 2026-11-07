@@ -1,0 +1,71 @@
+combined_version: milestone1-stopthecap-2026-10-29
+split_salt: stopthecap-2026-10-29
+split_digest: 932d20f1dca64c21537bed89739c633ace1b627c1a25f7d78c45a17915cf27a2
+generator_holdout: null
+domain_holdout: news_reuters
+holdout_note: 'No generator is held out from the trainable corpus. Holding out a generator
+  is incompatible with pair-grouping: because every machine variant of a prompt shares
+  one group with its human source, excluding one generator removes every group it
+  appears in. Unseen-generator evaluation is provided instead by RAID, which is never
+  trained on.'
+sources:
+  genvidbench:
+    version: Pair1_labels.txt + Pair2_labels.txt from HF jian-0/GenVidBench (media
+      not downloaded)
+    licence: CC-BY-NC-4.0
+    train_permitted: false
+    records: 20000
+  ghostbuster:
+    version: 86ebd72590556a81622986fab736ab9227a948af
+    licence: CC-BY-3.0
+    train_permitted: true
+    records: 22100
+  hc3:
+    version: Hello-SimpleAI/HC3@main (5 subset jsonl files; all.jsonl omitted as a
+      duplicate union)
+    licence: CC-BY-SA-4.0
+    train_permitted: false
+    records: 8000
+  raid:
+    version: liamdugan/raid@hf, split=train, systematic random sample
+    licence: MIT
+    train_permitted: false
+    records: 2000
+counts:
+  records:
+    excluded: 2508
+    quarantine: 28547
+    test_id: 1518
+    test_ood_domain: 6976
+    train: 11150
+    val: 1401
+  groups:
+    quarantine: 27599
+    test_id: 421
+    test_ood_domain: 50
+    train: 3164
+    val: 408
+per_dataset:
+  genvidbench: 20000
+  ghostbuster: 22100
+  hc3: 8000
+  raid: 2000
+records_available_before_caps:
+  genvidbench: 141995
+  ghostbuster: 22100
+  hc3: 85431
+  raid: 2000
+sample_caps_applied:
+  genvidbench:
+    available: 141995
+    used: 20000
+  hc3:
+    available: 85431
+    used: 8000
+quality_flags:
+  licence_unresolved: 20000
+  too_short: 2463
+duplicate_pairs: 45
+reproduction:
+- python -m ml.cli build
+- python -m ml.cli audit

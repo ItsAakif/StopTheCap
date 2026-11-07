@@ -1,0 +1,11 @@
+{
+  "rows": 28662,
+  "label_counts": {
+    "1": 14331,
+    "0": 14331
+  },
+  "removed": {},
+  "removed_by_reference": {},
+  "internal_cross_split_duplicates": 5,
+  "examples": []
+}

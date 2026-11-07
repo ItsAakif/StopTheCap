@@ -1,0 +1,41 @@
+dataset_id: m4gt_bench
+display_name: "M4GT-Bench / M4 / SemEval-2024 Task 8 (one lineage) -- EXCLUDED"
+enabled: false
+paper_url: https://arxiv.org/abs/2402.11175
+official_url: https://github.com/mbzuai-nlp/M4GT-Bench
+retrieved_at: 2026-10-29
+access_method: official_site
+version:
+  kind: unknown
+  value: "Google Drive folder, unversioned"
+licence:
+  spdx: UNKNOWN
+  evidence_url: ""
+  commercial_use: unknown
+  redistribution: forbidden
+  attribution_required: true
+  share_alike: false
+  verified_at: ""
+  unresolved: true
+  unresolved_note: >
+    Neither mbzuai-nlp/M4 nor mbzuai-nlp/M4GT-Bench contains a LICENSE file and
+    neither README states terms. Absence of a licence is not permission. M4's own
+    README states the corpus is extended by SemEval-2024 Task 8, and M4GT-Bench IS
+    that benchmark -- so these are ONE lineage and must not be counted as three
+    independent datasets.
+permitted_uses:
+  train: false
+  internal_eval: false
+  publish_weights: false
+  publish_manifest: true
+  redistribute_original: false
+  commercial: false
+tasks: [text_binary, text_generator_attribution, text_mixed_boundary]
+modality: text
+blocked_reason: >
+  No declared licence and unversioned Google Drive hosting. It is the only source
+  for mixed human-machine boundary detection and generator attribution, so those
+  two capabilities are deferred until terms are clarified in writing.
+next_action: >
+  Email the maintainers for written terms; record any reply in docs/licences/.
+  Do not block text v1 on this.

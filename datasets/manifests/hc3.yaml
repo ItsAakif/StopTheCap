@@ -1,0 +1,37 @@
+dataset_id: hc3
+display_name: "HC3: Human ChatGPT Comparison Corpus"
+enabled: true
+paper_url: https://arxiv.org/abs/2301.07597
+official_url: https://huggingface.co/datasets/Hello-SimpleAI/HC3
+retrieved_at: 2026-10-29
+access_method: http_download
+version:
+  kind: hub_dataset
+  value: "Hello-SimpleAI/HC3@main (5 subset jsonl files; all.jsonl omitted as a duplicate union)"
+licence:
+  spdx: CC-BY-SA-4.0
+  evidence_url: https://huggingface.co/datasets/Hello-SimpleAI/HC3
+  commercial_use: permitted_with_share_alike
+  redistribution: permitted_with_share_alike
+  attribution_required: true
+  share_alike: true
+  verified_at: 2026-10-29
+  unresolved: false
+permitted_uses:
+  train: false          # EVALUATION ONLY -- single generator, 2023-era
+  internal_eval: true
+  publish_weights: true
+  publish_manifest: true
+  redistribute_original: true   # under CC BY-SA
+  commercial: true
+tasks: [text_binary]
+modality: text
+role: quarantine_eval
+domains: [finance, medicine, open_qa, reddit, wiki]
+known_issues:
+  - "Single generator: ChatGPT only (2023). A model scoring well here may not transfer."
+  - "Answers are paired per question, so human and ChatGPT answers to the same question must share a group_id."
+  - "ShareAlike applies to any redistributed derivative text."
+notes: >
+  Secondary independent evaluation set and a single-generator control. Never
+  trained on; all records forced to QUARANTINE.

@@ -1,0 +1,51 @@
+# Encoder fine-tune configuration (experiment E1).
+#
+# NOT YET RUN. No number anywhere may cite this experiment until it is executed and
+# its output is committed. The Colab entitlement must be measured first
+# (docs/colab-entitlement.md) because the compute budget is currently unknown.
+
+experiment: E1
+model_name: distilbert-base-cased        # then bert-base-cased, then deberta-v3-small
+max_length: 512
+epochs: 3
+learning_rate: 5.0e-5
+batch_size: 16
+grad_accum: 2                            # effective batch 32
+weight_decay: 0.01
+warmup_ratio: 0.06
+fp16: true
+seed: 42
+
+# The 5.9:1 machine:human imbalance. Weighted loss is used instead of resampling:
+# resampling either discards machine data or duplicates human text (risking
+# near-duplicate leakage), whereas reweighting keeps every row once.
+imbalance:
+  strategy: class_weighted_loss
+  # computed from the train split at runtime and recorded in the run log
+  compute_from_split: true
+
+# Threshold is chosen on val only, at a human false-positive budget, and frozen
+# before the test split is scored. Never tuned on test_id.
+threshold:
+  selection_split: val
+  target_human_fpr: 0.05
+
+# Checkpointing is mandatory: Colab terminates runtimes without warning.
+checkpoint:
+  dir: checkpoints/E1
+  every_steps: 200
+  keep_last: 2
+  resume: true
+
+output:
+  report: reports/E1_encoder.md
+  run_log: reports/runs/E1.json
+  predictions: reports/E1_predictions.jsonl
+
+# Evaluation protocol (research/03, research/15). These splits are fixed by the
+# committed manifest and must not be changed to improve a number.
+evaluation:
+  in_domain: [val, test_id]
+  independent: [quarantine]        # RAID + HC3, never fitted on
+  report: [roc_auc, pr_auc, f1_at_threshold, human_fpr_with_ci, tpr_at_fpr,
+           brier, ece, per_generator, per_domain]

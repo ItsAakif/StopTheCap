@@ -1,0 +1,38 @@
+dataset_id: raid
+display_name: "RAID: A Shared Benchmark for Robust Evaluation of Machine-Generated Text Detectors"
+enabled: true
+paper_url: https://aclanthology.org/2024.acl-long.674/
+official_url: https://huggingface.co/datasets/liamdugan/raid
+retrieved_at: 2026-10-29
+access_method: hub_api_sample
+version:
+  kind: hub_dataset
+  value: "liamdugan/raid@hf, split=train, systematic random sample"
+  note: "Full train split is ~800 MB (no adversarial) to 11.8 GB (adversarial). Milestone 1 uses a cached sample."
+licence:
+  spdx: MIT
+  evidence_url: https://huggingface.co/datasets/liamdugan/raid
+  commercial_use: permitted
+  redistribution: permitted
+  attribution_required: true
+  share_alike: false
+  verified_at: 2026-10-29
+  unresolved: false
+permitted_uses:
+  train: false          # EVALUATION ONLY -- must never enter a training path
+  internal_eval: true
+  publish_weights: true
+  publish_manifest: true
+  redistribute_original: true
+  commercial: true
+tasks: [text_binary]
+modality: text
+role: quarantine_eval
+known_issues:
+  - "Official RAID-test has only 2 columns (id + label) and NO text; it is a submission-only leaderboard. Local evaluation must use the train split."
+  - "The 2.27M-row train split is ordered by domain then attack; a head-of-file slice would be catastrophically biased. Sampling must be spread across the whole split."
+  - "Class balance is heavily skewed toward machine text; false-positive rate must be computed from the human subset only."
+  - "RAID is never trained on in this project. Splits are forced to QUARANTINE."
+notes: >
+  Primary independent evaluation benchmark. Used to measure out-of-domain and
+  unseen-generator performance, never for fitting.

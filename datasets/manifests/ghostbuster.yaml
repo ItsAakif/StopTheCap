@@ -1,0 +1,52 @@
+dataset_id: ghostbuster
+display_name: "Ghostbuster data (essay, wp news, Reuters author-conditioned)"
+enabled: true
+paper_url: https://arxiv.org/abs/2305.15047
+official_url: https://github.com/vivek3141/ghostbuster-data
+retrieved_at: 2026-10-29
+access_method: git_clone
+version:
+  kind: git_commit
+  value: "86ebd72590556a81622986fab736ab9227a948af"
+  note: "sparse clone excluding **/logprobs/** (no logprob data is needed for classification)"
+licence:
+  spdx: CC-BY-3.0
+  evidence_url: https://github.com/vivek3141/ghostbuster-data/blob/master/LICENSE
+  commercial_use: permitted
+  redistribution: permitted
+  attribution_required: true
+  share_alike: false
+  verified_at: 2026-10-29
+  unresolved: false
+permitted_uses:
+  train: true
+  internal_eval: true
+  publish_weights: true
+  publish_manifest: true
+  redistribute_original: true
+  commercial: true
+tasks: [text_binary]
+modality: text
+domains: [student_essay, news, news_reuters]
+included_dirs:
+  essay: "student_essay; variants human(0) | gpt,claude,gpt_prompt1,gpt_prompt2,gpt_semantic,gpt_writing(1)"
+  wp: "news; same variant scheme; grouped by file stem"
+  reuter: "news_reuters; grouped by AUTHOR to prevent author-style leakage"
+  other/gptzero: "news; 50 human + 50 gpt"
+known_issues:
+  - "Machine text is ada/davinci-era (GPT-3) and Claude-era; not representative of 2025-2026 generators. Must be disclosed in the model card."
+  - "Authors' label rule is a path substring match ('gpt' or 'claude' in path), which mislabels other/undetectable (machine) as human. That directory is therefore excluded here rather than inherited."
+  - "Predominantly British and American English (paper disclaimer)."
+  - "Files are plain .txt; the paper README's pickle note applies to other artefacts, not the text corpus."
+excluded_dirs:
+  other/bawe: "human corpus; label/pairing unverifiable from repository alone"
+  other/ets: "human corpus; label/pairing unverifiable from repository alone"
+  other/lang8: "human corpus; label/pairing unverifiable from repository alone"
+  other/pelic: "human corpus; label/pairing unverifiable from repository alone"
+  other/toefl91: "human corpus; label/pairing unverifiable from repository alone"
+  other/undetectable: "machine (evasion tool) but authors' path rule labels it human"
+  perturb: "perturbation suite; base-label provenance undocumented"
+  perturb_old: "perturbation suite (legacy); base-label provenance undocumented"
+notes: >
+  The only text dataset in the audit whose licence clearly permits training,
+  redistribution and commercial use. Designated the sole training source for v1.

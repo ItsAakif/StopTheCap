@@ -1,0 +1,40 @@
+dataset_id: dfdc
+display_name: "DFDC (Deepfake Detection Challenge) -- BLOCKED"
+enabled: false
+official_url: https://www.kaggle.com/competitions/deepfake-detection-challenge
+retrieved_at: 2026-10-29
+access_method: official_site
+version:
+  kind: unknown
+  value: "unpinned"
+licence:
+  spdx: UNKNOWN
+  evidence_url: ""
+  commercial_use: forbidden
+  redistribution: forbidden
+  attribution_required: true
+  share_alike: false
+  verified_at: ""
+  unresolved: true
+  unresolved_note: >
+    The competition rules must be accepted inside an authenticated Kaggle session;
+    the terms could not be read unauthenticated. Reported figures (~470 GB full,
+    ~10 GB preview) are REPORTED, not verified.
+permitted_uses:
+  train: false
+  internal_eval: false
+  publish_weights: false
+  publish_manifest: true
+  redistribute_original: false
+  commercial: false
+tasks: [video_manipulated]
+modality: video
+blocked_reason: >
+  Licence and access terms unverified. Emitting no records is deliberate: inventing
+  metadata would violate the project's own provenance rule.
+next_action: >
+  Accept the competition rules with a Kaggle account, record the terms URL and date,
+  then decide whether manipulated-video detection is in scope for v1.
+notes: >
+  DFDC is the only candidate for MANIPULATED video detection. It is a different task
+  from GenVidBench and must never be merged with it.

@@ -1,0 +1,90 @@
+{
+  "collected_at_utc": "2026-11-04T16:57:23Z",
+  "platform": {
+    "host": "colab",
+    "colab_release": "release-colab-external-images_20261102-060107_RC00",
+    "colab_gpu_env": "1",
+    "kaggle_run_type": null,
+    "note": "host detection is heuristic; trust the GPU fields over this label"
+  },
+  "cpu": {
+    "platform": "Linux-6.6.159+-x86_64-with-glibc2.39",
+    "python": "3.13.16",
+    "cpu_count": 2,
+    "torch_threads": 1
+  },
+  "memory": {
+    "total_gb": 13.29,
+    "available_gb": 9.59,
+    "source": "/proc/meminfo"
+  },
+  "gpu": {
+    "torch": "2.11.0+cu130",
+    "cuda_available": true,
+    "cuda_version": "13.0",
+    "device_count": 1,
+    "devices": [
+      {
+        "index": 0,
+        "name": "Tesla T4",
+        "total_vram_gb": 15.64,
+        "major": 7,
+        "minor": 5,
+        "multi_processor_count": 40
+      }
+    ],
+    "nvidia_smi": [
+      "Tesla T4, 15360 MiB, 580.82.07"
+    ]
+  },
+  "disk": {
+    "cwd": {
+      "path": "/content/StopTheCap",
+      "total_gb": 120.9,
+      "free_gb": 120.5
+    },
+    "root": {
+      "path": "/",
+      "total_gb": 120.9,
+      "free_gb": 120.5
+    },
+    "content": {
+      "path": "/content",
+      "total_gb": 120.9,
+      "free_gb": 120.5
+    },
+    "drive": {
+      "path": "/content/drive/MyDrive",
+      "total_gb": 120.9,
+      "free_gb": 114.5
+    }
+  },
+  "quota": {
+    "gpu_hours_remaining": null,
+    "reason": "not exposed to the runtime; read it in the account UI",
+    "colab_where": "Runtime -> View compute units / purchase panel",
+    "kaggle_where": "Settings -> accelerator usage, or the notebook GPU quota indicator",
+    "session_timeout_minutes": null,
+    "session_timeout_note": "not exposed programmatically; record from the UI or observe"
+  },
+  "checkpoint": {
+    "dir": "/content/drive/MyDrive/StopTheCap_reports/ckpt_probe",
+    "writable": true,
+    "readback_matches": true,
+    "sha256_prefix": "a2d72ac6634e84cd",
+    "survives_disconnect": null,
+    "survives_disconnect_note": "Re-run this cell after Runtime -> Disconnect to fill this in. A file present after disconnect means persistent storage works."
+  },
+  "benchmark": {
+    "model": "distilbert-base-cased",
+    "device": "cuda",
+    "batch_size": 8,
+    "seq_len": 128,
+    "steps": 30,
+    "seconds": 2.869,
+    "steps_per_s": 10.4559,
+    "examples_per_s": 83.65,
+    "peak_vram_gb": 1.356,
+    "peak_vram_note": null
+  }
+}
