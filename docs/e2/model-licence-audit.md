@@ -242,3 +242,72 @@ curl.exe -sL "https://raw.githubusercontent.com/meta-llama/llama-models/8d29d93f
 ```
 
 Verify with `Get-FileHash <file> -Algorithm SHA256` against section 1.
+
+---
+
+## 8. Amendment, 2026-11-08: Llama withdrawn, Qwen3.5-4B admitted
+
+This section supersedes section 5 for the **active** generators. The Llama 3.2 analysis in section 3
+remains as evidence for a future run if access is granted; it is no longer the E2-C1 generator.
+
+### 8.1 Why the change
+
+The Hugging Face access request for `meta-llama/Llama-3.2-3B-Instruct` is **pending review**
+(2026-11-08). The model is gated (`manual`) and cannot be downloaded until Meta approves, so the
+generation run cannot proceed with it. A substitute was required.
+
+The constraint is the runtime: a free Colab T4 has **15.64 GB** of VRAM. The official Qwen3.6 and
+Qwen3.8 lineups do not contain a model that fits and remains practical for 20,000 samples:
+
+| Model | Size (bf16) | Licence | Verdict |
+|---|---:|---|---|
+| `Qwen/Qwen3.8-27B` | 55.6 GB | Apache-2.0 | 4-bit is ~14 GB; borderline OOM on T4, ~20-30 h on an L4 |
+| `Qwen/Qwen3.8-Flash-Next` | 360 GB | Qwen Community Licence 1.0 | Not runnable on a single GPU |
+| `Qwen/Qwen3.8-2.4T-A95B` | ~2.4 T | Qwen Community Licence 1.0 | Not runnable on a single GPU |
+| `Qwen/Qwen3.6-27B` | 55.6 GB | Apache-2.0 | Same problem as 3.8-27B |
+| `Qwen/Qwen3.6-35B-A3B` | 71.9 GB | Apache-2.0 | Too large |
+| **`Qwen/Qwen3.5-4B`** | **9.3 GB** | **Apache-2.0** | **Fits a T4 at fp16** |
+
+### 8.2 The admitted model
+
+| Property | Value |
+|---|---|
+| Model ID | `Qwen/Qwen3.5-4B` |
+| Revision | `851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a` |
+| Revision last modified | 2026-03-02 |
+| Gated | **No** |
+| Licence | **Apache-2.0** |
+| Licence file | **Present**: `LICENSE`, 11,544 bytes, sha256 `bbedc3fda3305820b977265f01b8619d87570a6739de3a5582c3464840f1e57a` |
+| Model card | `README.md`, 77,661 bytes, sha256 `1406be1b6b8fd8a6545870da516912804756593628a1d0fb0a7965211e82a7bb` |
+| Architecture | `Qwen3_5ForConditionalGeneration` (`pipeline_tag: image-text-to-text`) |
+| Size | 9.3 GB bf16; loaded as fp16, no quantisation |
+
+**Licence basis.** Apache-2.0 section 2 grants use, reproduction, derivative works and distribution
+with no field-of-use restriction. Unlike Mistral, Qwen ships the licence text with the weights, so
+this entry does not rely on model-card metadata alone.
+
+**Output terms.** Apache-2.0 is silent on model outputs. Generated text is therefore recorded as
+`outputs_licensed: false`, exactly as for Mistral. There is **no** attribution or naming obligation
+attached to the outputs, and no acceptable-use policy beyond applicable law.
+
+### 8.3 What this costs
+
+1. **RAID family parity is reduced.** RAID's labels include `llama-chat`; Qwen is not among the
+   generators RAID tests. E2-C1 can no longer claim to target that specific column. It still targets
+   `mistral` and `mistral-chat` through Mistral-7B-Instruct-v0.2.
+2. **The model is 4B, not 27B.** Qwen3.5-4B is the newest *runnable* member of the family, not the
+   strongest. Results must not be described as representative of Qwen3.8.
+3. **The architecture is multimodal.** Text-only inference goes through `AutoProcessor` and
+   `AutoModelForImageTextToText`, not `AutoModelForCausalLM`. That path must be proven by the Colab
+   smoke test before any full run.
+
+### 8.4 Updated decision
+
+| Generator | Status | Used in E2-C1? |
+|---|---|---|
+| `mistralai/Mistral-7B-Instruct-v0.2` | `approved_private_research` | **Yes** |
+| `Qwen/Qwen3.5-4B` | `approved_private_research` | **Yes** |
+| `meta-llama/Llama-3.2-3B-Instruct` | `not_admitted_access_pending` | **No** - retained in `withdrawn_models` for a future run |
+
+The machine-readable registry reflects this: active entries live in `models`, the Llama entry lives
+in `withdrawn_models` and is not resolvable by the generation config.

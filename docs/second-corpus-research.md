@@ -101,7 +101,8 @@ RAID actually tests - which is the most plausible explanation for the 0.532.
 
 **The only routes to those generators are:**
 
-1. **Generate them ourselves** with Apache-2.0 models (Mistral 7B, Llama 3.2, MPT-7B) on Colab -
+1. **Generate them ourselves** with Apache-2.0 models (Mistral 7B and Qwen3.5-4B; Llama 3.2 was
+   considered but is **not** Apache-2.0, and its access is pending) on Colab -
    licence-clean, exact control, but 10-20k generations of compute.
 2. Use RAID itself for training - **rejected**: it destroys RAID's value as an independent benchmark.
 

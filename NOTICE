@@ -21,8 +21,10 @@ Evaluation and source datasets
 
 Model weights
     DistilBERT (Apache-2.0), Mistral-7B-Instruct-v0.2 (Apache-2.0) and
-    Llama-3.2-3B-Instruct (Llama 3.2 Community License) are referenced as
-    dependencies. No model weights are distributed in this repository.
+    Qwen3.5-4B (Apache-2.0) are referenced as dependencies. No model weights
+    are distributed in this repository. A Llama-3.2-3B-Instruct entry is
+    retained in docs/e2/model-licence-audit.md because its Hugging Face access
+    request is pending; it is not an active generator.
 
 Generated text
     No generated corpus is distributed. Text produced by the generators is

@@ -58,6 +58,65 @@
       "confidence": "high"
     },
     {
+      "generator_id": "qwen3_5_4b",
+      "display_name": "Qwen3.5-4B",
+      "model_id": "Qwen/Qwen3.5-4B",
+      "revision": "851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a",
+      "retrieved_at": "2026-11-08",
+      "parameters_b": 4.0,
+      "gated": false,
+      "architecture": "Qwen3_5ForConditionalGeneration",
+      "architectures": [
+        "Qwen3_5ForConditionalGeneration"
+      ],
+      "pipeline_tag": "image-text-to-text",
+      "hidden_size": 2560,
+      "torch_dtype": "bfloat16",
+      "access_requirements": "None. Public download at the pinned revision.",
+      "licence": {
+        "spdx": "Apache-2.0",
+        "name": "Apache License 2.0",
+        "version_date": null,
+        "declared_by": "LICENSE file in the publisher's repository and model-card front-matter 'license: apache-2.0'",
+        "declaration_url": "https://huggingface.co/Qwen/Qwen3.5-4B/raw/851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a/LICENSE",
+        "licence_file_present": true,
+        "licence_file_note": "The repository at the pinned revision contains a LICENSE file with the full Apache License 2.0 text (sha256 bbedc3fda3305820b977265f01b8619d87570a6739de3a5582c3464840f1e57a, 11544 bytes); the model card also declares 'license: apache-2.0'.",
+        "evidence": [
+          {
+            "path": "research/_evidence/licences/qwen3_5_4b__LICENSE",
+            "sha256": "bbedc3fda3305820b977265f01b8619d87570a6739de3a5582c3464840f1e57a",
+            "bytes": 11544,
+            "source_url": "https://huggingface.co/Qwen/Qwen3.5-4B/raw/851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a/LICENSE"
+          },
+          {
+            "path": "research/_evidence/licences/qwen3_5_4b__README.md",
+            "sha256": "1406be1b6b8fd8a6545870da516912804756593628a1d0fb0a7965211e82a7bb",
+            "bytes": 77661,
+            "source_url": "https://huggingface.co/Qwen/Qwen3.5-4B/raw/851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a/README.md"
+          }
+        ]
+      },
+      "output_terms": {
+        "outputs_licensed": false,
+        "outputs_restricted_by_licence": false,
+        "basis": "Apache-2.0 licenses the Work (software and weights) and is silent on model outputs: it neither grants rights in them nor restricts them.",
+        "recorded_status": "not licensed by the weight licence; standalone copyright status uncertain and jurisdiction-dependent",
+        "assert_copyright": false
+      },
+      "use_restrictions": [],
+      "attribution_requirements": [],
+      "redistribution_restrictions": [
+        "Apache-2.0 section 4 applies only if the weights or derivative model artefacts are redistributed (not planned)."
+      ],
+      "academic_generation_permitted": true,
+      "permitted_use_basis": "Apache-2.0 section 2 grants a perpetual, worldwide, non-exclusive, royalty-free, irrevocable copyright licence to reproduce, prepare derivative works of and distribute the Work, with no field-of-use restriction. Generation is use of the Work.",
+      "conditions": [],
+      "status": "approved_private_research",
+      "confidence": "high"
+    }
+  ],
+  "withdrawn_models": [
+    {
       "generator_id": "llama_32_3b_instruct",
       "display_name": "Llama-3.2-3B-Instruct",
       "model_id": "meta-llama/Llama-3.2-3B-Instruct",
@@ -128,7 +187,9 @@
         "Any detector trained on these outputs must begin with 'Llama' in its model name if it is ever distributed or made available.",
         "Licence is bound to revision 0cb88a4f; a revision change requires re-audit."
       ],
-      "status": "approved_private_research_conditional",
+      "status": "not_admitted_access_pending",
+      "active": false,
+      "reason": "Hugging Face access request pending review as of 2026-11-08",
       "confidence": "medium"
     }
   ],

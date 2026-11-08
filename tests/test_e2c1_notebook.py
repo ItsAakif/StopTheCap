@@ -203,6 +203,8 @@ def test_hardware_cell_asserts_cuda_and_20000_plan(notebook):
     assert "config_digest" in source
     assert "5000" in source
     assert "20000" in source
+    assert "generator.architecture" in source
+    assert "generator.loader" in source
 
 
 # ---------------------------------------------------------------------------
@@ -210,13 +212,24 @@ def test_hardware_cell_asserts_cuda_and_20000_plan(notebook):
 # ---------------------------------------------------------------------------
 
 
-def test_licence_cell_validates_registry_and_llama_is_not_apache(notebook):
+def test_licence_cell_is_generic_and_asserts_outputs_licensed(notebook):
     source = _source(notebook["cells"][12])
 
     assert "validate_config_against_licences" in source
     assert "outputs_licensed is False" in source
-    assert 'licence.get("spdx") != "Apache-2.0"' in source
-    assert "not_apache_2_0" in source
+    # The table is registry-driven, not a hardcoded family rule.
+    assert "llama" not in source.lower()
+    assert "not_apache_2_0" not in source
+    for field in (
+        "generator.generator_id",
+        "generator.model_id",
+        "generator.model_revision",
+        "licence.get('spdx'",
+        "entry.get('status'",
+        "entry.get('gated'",
+        "outputs_licensed",
+    ):
+        assert field in source, field
 
 
 # ---------------------------------------------------------------------------

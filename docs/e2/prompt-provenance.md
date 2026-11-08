@@ -184,7 +184,7 @@ These are four different things and are recorded separately.
 | Layer | What it is | Governing terms | Redistribution |
 |---|---|---|---|
 | Source prompt | Wikipedia paragraph, plaintext, at a pinned revision | **CC BY-SA 4.0**; attribution required; share-alike on adaptations | Permitted with attribution; the dataset stays private, so share-alike is not triggered |
-| Model weights | Mistral-7B-Instruct-v0.2 / Llama-3.2-3B-Instruct | Apache-2.0 / Llama 3.2 Community License | Weights are not redistributed |
+| Model weights | Mistral-7B-Instruct-v0.2 / Qwen3.5-4B | Apache-2.0 / Apache-2.0 | Weights are not redistributed |
 | Generated output | Text produced by those weights | **No licence granted by either weight licence**; copyright status uncertain | **Not redistributed.** Private research use only; `outputs_licensed: false` on every record |
 | Derived record | ids, hashes, partition, topic, annotations | Our own; no third-party licence attaches | Internal only |
 
@@ -213,9 +213,10 @@ Revision <revision_id>, retrieved <retrieved_at>. <oldid URL>. Licensed CC BY-SA
    the stronger pin.
 5. **Near-duplicates are clustered, not deleted** (section 5). They consume prompt budget but
    cannot cross partitions.
-6. **Llama is a family-level proxy only.** RAID's labels are `llama-chat`, `mistral` and
-   `mistral-chat`; RAID does not contain Llama-3.2-3B-Instruct or Mistral-7B-Instruct-v0.2 outputs.
-   No exact-generator parity is claimed.
+6. **Family-level coverage only.** RAID's labels are `llama-chat`, `mistral` and `mistral-chat`.
+   E2-C1 uses Mistral-7B-Instruct-v0.2 and Qwen3.5-4B: `mistral` is covered at family level, but
+   **`llama-chat` is not covered** because Llama access is pending (see the audit amendment). RAID
+   contains neither Mistral-v0.2 nor Qwen3.5-4B outputs, so no exact-generator parity is claimed.
 7. **Mistral generation will be 4-bit NF4**, not the published fp16 checkpoint, because 7B fp16
    does not fit a 15.64 GB T4 alongside activations and KV cache. Every Mistral record carries
    `deviation_from_published_checkpoint: true`.

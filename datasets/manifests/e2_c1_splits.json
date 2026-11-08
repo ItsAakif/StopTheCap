@@ -5009,31 +5009,31 @@
     },
     "by_partition_generator_decoding": {
       "test_holdout": {
-        "llama_32_3b_instruct": {
+        "mistral_7b_instruct_v02": {
           "greedy": 492,
           "sampling": 492
         },
-        "mistral_7b_instruct_v02": {
+        "qwen3_5_4b": {
           "greedy": 492,
           "sampling": 492
         }
       },
       "train": {
-        "llama_32_3b_instruct": {
+        "mistral_7b_instruct_v02": {
           "greedy": 4004,
           "sampling": 4004
         },
-        "mistral_7b_instruct_v02": {
+        "qwen3_5_4b": {
           "greedy": 4004,
           "sampling": 4004
         }
       },
       "val": {
-        "llama_32_3b_instruct": {
+        "mistral_7b_instruct_v02": {
           "greedy": 504,
           "sampling": 504
         },
-        "mistral_7b_instruct_v02": {
+        "qwen3_5_4b": {
           "greedy": 504,
           "sampling": 504
         }
@@ -5041,7 +5041,7 @@
     },
     "by_partition_generator_decoding_topic": {
       "test_holdout": {
-        "llama_32_3b_instruct": {
+        "mistral_7b_instruct_v02": {
           "greedy": {
             "arts_culture": 101,
             "business_economics": 32,
@@ -5067,7 +5067,7 @@
             "stem": 12
           }
         },
-        "mistral_7b_instruct_v02": {
+        "qwen3_5_4b": {
           "greedy": {
             "arts_culture": 101,
             "business_economics": 32,
@@ -5095,7 +5095,7 @@
         }
       },
       "train": {
-        "llama_32_3b_instruct": {
+        "mistral_7b_instruct_v02": {
           "greedy": {
             "arts_culture": 818,
             "business_economics": 268,
@@ -5121,7 +5121,7 @@
             "stem": 99
           }
         },
-        "mistral_7b_instruct_v02": {
+        "qwen3_5_4b": {
           "greedy": {
             "arts_culture": 818,
             "business_economics": 268,
@@ -5149,7 +5149,7 @@
         }
       },
       "val": {
-        "llama_32_3b_instruct": {
+        "mistral_7b_instruct_v02": {
           "greedy": {
             "arts_culture": 103,
             "business_economics": 35,
@@ -5175,7 +5175,7 @@
             "stem": 13
           }
         },
-        "mistral_7b_instruct_v02": {
+        "qwen3_5_4b": {
           "greedy": {
             "arts_culture": 103,
             "business_economics": 35,
@@ -5258,7 +5258,7 @@
     "train": 0.8,
     "val": 0.1
   },
-  "generated_at": "2026-11-06T15:21:06Z",
+  "generated_at": "2026-11-08T17:46:37Z",
   "n_prompts": 5000,
   "partitions": [
     "train",

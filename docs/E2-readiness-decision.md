@@ -1,5 +1,8 @@
 ﻿# E2 training readiness - decision
 
+> **Superseded in part (2026-11-08).** The generator choice below is historical. Llama 3.2 is not Apache-2.0, and it is no longer an active generator because its HF access request is pending. The active generators are Mistral-7B-Instruct-v0.2 and Qwen3.5-4B. See `docs/e2/model-licence-audit.md` section 8.
+
+
 **Date:** 2026-11-06. Supersedes the composition proposal in `E2-dataset-audit-and-plan.md` §4.
 E1 untouched; evaluation sets untouched.
 
@@ -73,7 +76,7 @@ candidate is excluded for a specific, recorded reason - no candidate is excluded
 | Element | Choice | Why |
 |---|---|---|
 | Human prompts | Wikipedia paragraphs (CC BY-SA 4.0, attributed) | documented licence; already the domain of Ghostbuster's human side, so the *generator* is the only variable |
-| Generators | **Mistral-7B-Instruct** and **Llama-3.2-3B-Instruct** (both Apache-2.0) | these are the families RAID actually tests - the gap that explains 0.532 |
+| Generators | **Mistral-7B-Instruct** and **Llama-3.2-3B-Instruct** (Mistral Apache-2.0; Llama 3.2 Community License - **not** Apache-2.0) | these are the families RAID actually tests - the gap that explains 0.532 |
 | Volume | 10,000 per model, 2 decoding settings | comparable to E1's scale; ~2 h on a T4 |
 | Licence | our outputs, from Apache-2.0 weights, on CC BY-SA prompts | fully documented end to end |
 | Contamination | prompts are Ghostbuster's own domain, so dedup against HC3/RAID is still required and cheap | |
@@ -108,7 +111,7 @@ corpus will run through before training.
 
 ## 6. Unblocking steps, in order
 
-1. Generate 20,000 completions on Colab (Mistral-7B-Instruct, Llama-3.2-3B-Instruct; Apache-2.0).
+1. Generate 20,000 completions on Colab (Mistral-7B-Instruct-v0.2, Apache-2.0; Llama-3.2-3B-Instruct was replaced by Qwen3.5-4B on 2026-11-08 because Llama access is pending).
 2. Run the existing decontamination against HC3, RAID and Ghostbuster.
 3. Build the manifest, produce the digest, run the 12-gate audit.
 4. Only then train E2-C1 with E1's exact configuration.

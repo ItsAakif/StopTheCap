@@ -27,6 +27,9 @@ from ml.e2c1.generation import (
     PromptRejection,
     ResumeCorruptionError,
     ResumeMismatch,
+    _decode_new_tokens,
+    _encode_rendered,
+    _load_generator,
     append_record,
     config_digest,
     load_config,
@@ -285,13 +288,34 @@ def test_licence_validation_outputs_licensed(config, registry):
         validate_config_against_licences(config, bad_registry)
 
 
-def test_licence_validation_llama_not_apache_flag(config, registry):
+def test_licence_registry_has_exactly_the_two_approved_generators(registry):
+    generator_ids = {entry["generator_id"] for entry in registry["models"]}
+    assert generator_ids == {"mistral_7b_instruct_v02", "qwen3_5_4b"}
+    withdrawn_ids = {
+        entry["generator_id"] for entry in registry.get("withdrawn_models", [])
+    }
+    assert "llama_32_3b_instruct" in withdrawn_ids
+    assert "llama_32_3b_instruct" not in generator_ids
+    qwen = next(
+        entry for entry in registry["models"] if entry["generator_id"] == "qwen3_5_4b"
+    )
+    assert qwen["model_id"] == "Qwen/Qwen3.5-4B"
+    assert qwen["revision"] == "851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a"
+    assert qwen["licence"]["spdx"] == "Apache-2.0"
+    assert qwen["licence"]["licence_file_present"] is True
+    assert qwen["output_terms"]["outputs_licensed"] is False
+    assert qwen["status"] == "approved_private_research"
+    assert qwen["confidence"] == "high"
+
+
+def test_licence_validation_ignores_withdrawn_models(config, registry):
     bad_registry = copy.deepcopy(registry)
-    for entry in bad_registry["models"]:
-        if "llama" in entry["model_id"].lower():
-            entry["licence"]["not_apache_2_0"] = False
-    with pytest.raises(LicenceValidationError, match="not_apache_2_0"):
-        validate_config_against_licences(config, bad_registry)
+    for entry in bad_registry.get("withdrawn_models", []):
+        entry["status"] = "blocked"
+        entry["licence"]["spdx"] = "Apache-2.0"
+        entry["output_terms"]["outputs_licensed"] = True
+    # Only ``models`` is validated; withdrawn provenance is historical.
+    validate_config_against_licences(config, bad_registry)
 
 
 # ---------------------------------------------------------------------------
@@ -341,6 +365,226 @@ def test_render_prompt_rejects_delimiter_collision(config):
         with pytest.raises(PromptRejection, match="prompt_delimiter_collision"):
             render_prompt(bad, tokenizer, config)
     assert tokenizer.calls == []
+
+
+class SystemRejectingTokenizer:
+    def __init__(self) -> None:
+        self.calls: list[list[dict]] = []
+
+    def apply_chat_template(self, messages, tokenize, add_generation_prompt):
+        self.calls.append(messages)
+        if any(message["role"] == "system" for message in messages):
+            raise ValueError("System role is not supported by this chat template")
+        return "MERGED"
+
+
+def test_render_prompt_merges_system_role_when_template_rejects_it(config):
+    tokenizer = SystemRejectingTokenizer()
+    flags: list[str] = []
+    result = render_prompt("The source passage.", tokenizer, config, flags)
+
+    assert result == "MERGED"
+    assert flags == ["system_role_merged"]
+    assert len(tokenizer.calls) == 2
+    retry = tokenizer.calls[1]
+    assert [message["role"] for message in retry] == ["user"]
+    assert retry[0]["content"].startswith(
+        "You are a careful encyclopedic writer. You never copy source sentences."
+    )
+    assert "The source passage." in retry[0]["content"]
+
+
+# ---------------------------------------------------------------------------
+# Dual loader: multimodal processor vs causal tokenizer
+# ---------------------------------------------------------------------------
+
+
+class FakeTorch:
+    float16 = "float16"
+    bfloat16 = "bfloat16"
+    float32 = "float32"
+
+
+class DecodingTokenizer:
+    def __init__(self) -> None:
+        self.chat_template = "chat-template"
+        self.pad_token_id = 0
+        self.eos_token_id = 2
+        self.pad_token = "<pad>"
+        self.decoded: list[tuple[list[int], bool]] = []
+        self.encoded: list[tuple[str, str]] = []
+
+    def apply_chat_template(self, messages, tokenize, add_generation_prompt):
+        return "RENDERED"
+
+    def __call__(self, text, return_tensors):
+        self.encoded.append((text, return_tensors))
+        return {"input_ids": [[101, 102, 103]]}
+
+    def decode(self, token_ids, skip_special_tokens):
+        self.decoded.append((list(token_ids), skip_special_tokens))
+        return "DECODED"
+
+
+class FakeProcessor:
+    def __init__(self) -> None:
+        self.tokenizer = DecodingTokenizer()
+        self.text_calls: list[tuple[list[str], str]] = []
+
+    def __call__(self, text, return_tensors):
+        self.text_calls.append((list(text), return_tensors))
+        return {"input_ids": [[201, 202]]}
+
+
+class FakeAutoProcessor:
+    calls: list[tuple[str, str]] = []
+    instance = FakeProcessor()
+
+    @classmethod
+    def from_pretrained(cls, model_id, revision):
+        cls.calls.append((model_id, revision))
+        return cls.instance
+
+
+class FakeAutoModelForImageTextToText:
+    calls: list[tuple[str, dict]] = []
+
+    @classmethod
+    def from_pretrained(cls, model_id, **kwargs):
+        cls.calls.append((model_id, dict(kwargs)))
+        return object()
+
+
+class FakeAutoTokenizer:
+    calls: list[tuple[str, str]] = []
+
+    @classmethod
+    def from_pretrained(cls, model_id, revision):
+        cls.calls.append((model_id, revision))
+        return DecodingTokenizer()
+
+
+class FakeAutoModelForCausalLM:
+    calls: list[tuple[str, dict]] = []
+
+    @classmethod
+    def from_pretrained(cls, model_id, **kwargs):
+        cls.calls.append((model_id, dict(kwargs)))
+        return object()
+
+
+class FakeTransformers:
+    BitsAndBytesConfig = staticmethod(lambda **kwargs: dict(kwargs))
+    AutoTokenizer = FakeAutoTokenizer
+    AutoModelForCausalLM = FakeAutoModelForCausalLM
+    AutoProcessor = FakeAutoProcessor
+    AutoModelForImageTextToText = FakeAutoModelForImageTextToText
+
+
+def _load_with_fakes(generator):
+    FakeAutoProcessor.calls = []
+    FakeAutoProcessor.instance = FakeProcessor()
+    FakeAutoModelForImageTextToText.calls = []
+    FakeAutoTokenizer.calls = []
+    FakeAutoModelForCausalLM.calls = []
+    return _load_generator(
+        generator,
+        torch=FakeTorch,
+        transformers=FakeTransformers,
+        auto_tokenizer=FakeAutoTokenizer,
+        auto_model_causal=FakeAutoModelForCausalLM,
+        auto_processor=FakeAutoProcessor,
+        auto_model_image_text=FakeAutoModelForImageTextToText,
+    )
+
+
+def test_multimodal_spec_uses_autoprocessor_and_image_text_model(config):
+    generator = next(
+        entry for entry in config.generators if entry.loader == "multimodal"
+    )
+    processor, tokenizer, model, multimodal = _load_with_fakes(generator)
+
+    assert multimodal is True
+    assert processor is FakeAutoProcessor.instance
+    assert tokenizer is processor.tokenizer
+    assert FakeAutoProcessor.calls == [
+        (generator.model_id, generator.model_revision)
+    ]
+    assert FakeAutoTokenizer.calls == []
+    assert FakeAutoModelForCausalLM.calls == []
+    assert len(FakeAutoModelForImageTextToText.calls) == 1
+    model_id, kwargs = FakeAutoModelForImageTextToText.calls[0]
+    assert model_id == generator.model_id
+    assert kwargs == {
+        "revision": generator.model_revision,
+        "torch_dtype": FakeTorch.float16,
+        "device_map": "cuda",
+    }
+
+
+def test_causal_spec_uses_autotokenizer_and_causal_model(config):
+    generator = next(
+        entry for entry in config.generators if entry.loader == "causal"
+    )
+    processor, tokenizer, model, multimodal = _load_with_fakes(generator)
+
+    assert multimodal is False
+    assert processor is None
+    assert isinstance(tokenizer, DecodingTokenizer)
+    assert FakeAutoProcessor.calls == []
+    assert FakeAutoModelForImageTextToText.calls == []
+    assert FakeAutoTokenizer.calls == [
+        (generator.model_id, generator.model_revision)
+    ]
+    assert len(FakeAutoModelForCausalLM.calls) == 1
+
+
+def test_multimodal_encode_uses_processor_text_list(config):
+    generator = next(
+        entry for entry in config.generators if entry.loader == "multimodal"
+    )
+    processor, tokenizer, _model, multimodal = _load_with_fakes(generator)
+
+    encoded = _encode_rendered(
+        "RENDERED", processor=processor, tokenizer=tokenizer, multimodal=multimodal
+    )
+
+    assert encoded == {"input_ids": [[201, 202]]}
+    assert processor.text_calls == [(["RENDERED"], "pt")]
+    assert tokenizer.encoded == []
+
+
+class _Row:
+    def __init__(self, ids: list[int]) -> None:
+        self._ids = ids
+
+    def tolist(self) -> list[int]:
+        return list(self._ids)
+
+
+class _Output:
+    def __init__(self, rows: list[list[int]]) -> None:
+        self._rows = rows
+
+    def __getitem__(self, key):
+        row, selection = key
+        assert isinstance(selection, slice)
+        return _Row(self._rows[row][selection])
+
+
+def test_multimodal_generation_decodes_only_new_tokens(config):
+    generator = next(
+        entry for entry in config.generators if entry.loader == "multimodal"
+    )
+    processor, tokenizer, _model, _multimodal = _load_with_fakes(generator)
+    output = _Output([[10, 11, 12, 13, 14, 2]])
+
+    token_ids, raw = _decode_new_tokens(output, 4, tokenizer, row=0)
+
+    assert token_ids == [14, 2]
+    assert raw == "DECODED"
+    assert tokenizer.decoded == [([14, 2], True)]
+    assert processor.text_calls == []
 
 
 # ---------------------------------------------------------------------------

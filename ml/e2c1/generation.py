@@ -134,6 +134,8 @@ class GeneratorConfig(BaseModel):
     generator_id: str
     model_id: str
     model_revision: str = Field(pattern=REVISION_RE)
+    architecture: str
+    loader: Literal["causal", "multimodal"]
     dtype: str
     quantisation: QuantisationConfig
     gated: bool = False
@@ -329,16 +331,6 @@ def _describes_apache(entry: Mapping[str, Any], licence: Mapping[str, Any]) -> b
     return any("apache" in str(value).lower() for value in blobs if value is not None)
 
 
-def _is_llama(entry: Mapping[str, Any]) -> bool:
-    blob = f"{entry.get('generator_id', '')} {entry.get('model_id', '')} {entry.get('display_name', '')}"
-    return "llama" in blob.lower()
-
-
-def _is_mistral(entry: Mapping[str, Any]) -> bool:
-    blob = f"{entry.get('generator_id', '')} {entry.get('model_id', '')} {entry.get('display_name', '')}"
-    return "mistral" in blob.lower()
-
-
 def validate_config_against_licences(
     config: GenerationConfig | Mapping[str, Any] | str | Path,
     registry: Mapping[str, Any] | str | Path,
@@ -347,8 +339,8 @@ def validate_config_against_licences(
 
     Raises one :class:`LicenceValidationError` listing *every* violation. A
     missing entry, model/revision mismatch, disallowed status, bad revision format,
-    ``outputs_licensed`` not false, an Apache-2.0 mislabel, and the Llama/Mistral
-    ``not_apache_2_0`` split are all checked.
+    ``outputs_licensed`` not false, and an Apache-2.0 mislabel are all checked.
+    Only ``models`` is validated; ``withdrawn_models`` is historical provenance.
     """
     cfg = _as_config(config)
     document = _registry_document(registry)
@@ -419,18 +411,6 @@ def validate_config_against_licences(
                 f"is {spdx!r} (must be 'Apache-2.0')"
             )
 
-        not_apache = licence.get("not_apache_2_0")
-        if _is_llama(entry) and not_apache is not True:
-            problems.append(
-                f"generator {gid!r}: Llama entry must have licence.not_apache_2_0 "
-                f"is True (got {not_apache!r})"
-            )
-        if _is_mistral(entry) and not_apache is True:
-            problems.append(
-                f"generator {gid!r}: Mistral entry must not have "
-                f"licence.not_apache_2_0 is True"
-            )
-
     if problems:
         raise LicenceValidationError(problems)
 
@@ -455,12 +435,21 @@ USER_TEMPLATE = (
 )
 
 
-def render_prompt(source_text: str, tokenizer: Any, config: Any) -> str:
+def render_prompt(
+    source_text: str,
+    tokenizer: Any,
+    config: Any,
+    flags: list[str] | None = None,
+) -> str:
     """Render the §D.3 system+user messages with the tokenizer's chat template.
 
     The instruction is **100-150 words** (not 120-180) so that 256 new tokens
     rarely truncates the passage. A source text containing a delimiter is rejected
     as ``prompt_delimiter_collision`` rather than silently corrupting the prompt.
+
+    Some chat templates (notably multimodal processor templates) reject a
+    ``system`` role. In that case the system text is prepended to the user message
+    and ``system_role_merged`` is appended to ``flags`` when a list is supplied.
     """
     del config  # the template id is recorded on the record; rendering is fixed
     if "<<<SOURCE" in source_text or "SOURCE>>>" in source_text:
@@ -469,13 +458,28 @@ def render_prompt(source_text: str, tokenizer: Any, config: Any) -> str:
             "source_text contains an E2-C1 prompt delimiter",
         )
 
+    user_text = USER_TEMPLATE.format(source_text=source_text)
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user", "content": USER_TEMPLATE.format(source_text=source_text)},
+        {"role": "user", "content": user_text},
     ]
-    return tokenizer.apply_chat_template(
-        messages, tokenize=False, add_generation_prompt=True
-    )
+    try:
+        return tokenizer.apply_chat_template(
+            messages, tokenize=False, add_generation_prompt=True
+        )
+    except Exception:
+        merged = [
+            {
+                "role": "user",
+                "content": f"{SYSTEM_PROMPT}\n\n{user_text}",
+            }
+        ]
+        rendered = tokenizer.apply_chat_template(
+            merged, tokenize=False, add_generation_prompt=True
+        )
+        if flags is not None:
+            flags.append("system_role_merged")
+        return rendered
 
 
 # ---------------------------------------------------------------------------
@@ -1111,6 +1115,15 @@ def _build_plan(
         "n_prompts": len(selected_prompts),
         "n_total_prompts": len(prompts),
         "generators": generator_ids,
+        "generator_specs": {
+            generator.generator_id: {
+                "model_id": generator.model_id,
+                "model_revision": generator.model_revision,
+                "architecture": generator.architecture,
+                "loader": generator.loader,
+            }
+            for generator in generators
+        },
         "decodings": decoding_ids,
         "streams": streams,
         "stream_count": len(streams),
@@ -1166,6 +1179,104 @@ def _now_timestamp() -> str:
 
 def _sha256_text(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+# ---------------------------------------------------------------------------
+# Model loading / encoding helpers
+# ---------------------------------------------------------------------------
+
+
+def _load_generator(
+    generator: GeneratorConfig,
+    *,
+    torch: Any,
+    transformers: Any,
+    auto_tokenizer: Any,
+    auto_model_causal: Any,
+    auto_processor: Any,
+    auto_model_image_text: Any,
+) -> tuple[Any | None, Any, Any, bool]:
+    """Load ``(processor, tokenizer, model, multimodal)`` for one generator.
+
+    The model/tokenizer classes are injected from :func:`run_generation` (where the
+    only ``transformers`` imports live), so this helper stays torch-free at module
+    import time and is directly testable with fakes. A multimodal processor also
+    supplies the chat template and decoder through its ``tokenizer``.
+    """
+    if generator.loader == "multimodal":
+        processor = auto_processor.from_pretrained(
+            generator.model_id, revision=generator.model_revision
+        )
+        tokenizer = getattr(processor, "tokenizer", processor)
+        model = auto_model_image_text.from_pretrained(
+            generator.model_id,
+            revision=generator.model_revision,
+            torch_dtype=torch.float16,
+            device_map="cuda",
+        )
+        multimodal = True
+    else:
+        tokenizer = auto_tokenizer.from_pretrained(
+            generator.model_id, revision=generator.model_revision
+        )
+        load_kwargs: dict[str, Any] = {"revision": generator.model_revision}
+        quantisation = generator.quantisation.model_dump(mode="json")
+        method = str(quantisation.get("method", "none"))
+        dtype = {
+            "float16": torch.float16,
+            "bfloat16": torch.bfloat16,
+            "float32": torch.float32,
+        }.get(str(generator.dtype), torch.float16)
+        if method.startswith("bitsandbytes"):
+            compute_dtype = {
+                "float16": torch.float16,
+                "bfloat16": torch.bfloat16,
+                "float32": torch.float32,
+            }.get(str(quantisation.get("compute_dtype", generator.dtype)), torch.float16)
+            load_kwargs["quantization_config"] = transformers.BitsAndBytesConfig(
+                load_in_4bit=bool(quantisation.get("load_in_4bit", True)),
+                bnb_4bit_quant_type=str(quantisation.get("quant_type", "nf4")),
+                bnb_4bit_use_double_quant=bool(
+                    quantisation.get("double_quant", True)
+                ),
+                bnb_4bit_compute_dtype=compute_dtype,
+            )
+        else:
+            load_kwargs["torch_dtype"] = dtype
+
+        model = auto_model_causal.from_pretrained(
+            generator.model_id, **load_kwargs
+        )
+        processor = None
+        multimodal = False
+
+    if getattr(tokenizer, "pad_token_id", None) is None:
+        tokenizer.pad_token = tokenizer.eos_token
+    return processor, tokenizer, model, multimodal
+
+
+def _encode_rendered(
+    rendered: str,
+    *,
+    processor: Any | None,
+    tokenizer: Any,
+    multimodal: bool,
+) -> Any:
+    """Encode one rendered prompt with the multimodal processor or tokenizer."""
+    if multimodal:
+        return processor(text=[rendered], return_tensors="pt")
+    return tokenizer(rendered, return_tensors="pt")
+
+
+def _decode_new_tokens(
+    output_ids: Any,
+    prompt_length: int,
+    tokenizer: Any,
+    row: int = 0,
+) -> tuple[list[int], str]:
+    """Decode only the continuation, never the prompt tokens."""
+    token_ids = output_ids[row, prompt_length:].tolist()
+    return token_ids, tokenizer.decode(token_ids, skip_special_tokens=True)
 
 
 # ---------------------------------------------------------------------------
@@ -1300,7 +1411,12 @@ def run_generation(
     # ------------------------------------------------------------------
     import torch  # noqa: PLC0415 -- deliberate: import-safe module
     import transformers  # noqa: PLC0415
-    from transformers import AutoModelForCausalLM, AutoTokenizer  # noqa: PLC0415
+    from transformers import (  # noqa: PLC0415
+        AutoModelForCausalLM,
+        AutoModelForImageTextToText,
+        AutoProcessor,
+        AutoTokenizer,
+    )
 
     run_dir.mkdir(parents=True, exist_ok=True)
     state_path = run_dir / "state.json"
@@ -1341,40 +1457,19 @@ def run_generation(
 
     try:
         for generator in generators:
-            tokenizer = AutoTokenizer.from_pretrained(
-                generator.model_id, revision=generator.model_revision
+            processor, tokenizer, model, multimodal = _load_generator(
+                generator,
+                torch=torch,
+                transformers=transformers,
+                auto_tokenizer=AutoTokenizer,
+                auto_model_causal=AutoModelForCausalLM,
+                auto_processor=AutoProcessor,
+                auto_model_image_text=AutoModelForImageTextToText,
             )
-            if tokenizer.pad_token_id is None:
-                tokenizer.pad_token = tokenizer.eos_token
-
-            load_kwargs: dict[str, Any] = {"revision": generator.model_revision}
             quantisation = generator.quantisation.model_dump(mode="json")
-            method = str(quantisation.get("method", "none"))
-            dtype = {
-                "float16": torch.float16,
-                "bfloat16": torch.bfloat16,
-                "float32": torch.float32,
-            }.get(str(generator.dtype), torch.float16)
-            if method.startswith("bitsandbytes"):
-                compute_dtype = {
-                    "float16": torch.float16,
-                    "bfloat16": torch.bfloat16,
-                    "float32": torch.float32,
-                }.get(str(quantisation.get("compute_dtype", generator.dtype)), torch.float16)
-                load_kwargs["quantization_config"] = transformers.BitsAndBytesConfig(
-                    load_in_4bit=bool(quantisation.get("load_in_4bit", True)),
-                    bnb_4bit_quant_type=str(quantisation.get("quant_type", "nf4")),
-                    bnb_4bit_use_double_quant=bool(
-                        quantisation.get("double_quant", True)
-                    ),
-                    bnb_4bit_compute_dtype=compute_dtype,
-                )
-            else:
-                load_kwargs["torch_dtype"] = dtype
-
-            model = AutoModelForCausalLM.from_pretrained(generator.model_id, **load_kwargs)
             device = "cuda" if torch.cuda.is_available() else "cpu"
-            model.to(device)
+            if not multimodal:
+                model.to(device)
             model.eval()
 
             chat_template = getattr(tokenizer, "chat_template", None) or ""
@@ -1426,13 +1521,21 @@ def run_generation(
                             "prompt": prompt,
                             "sample_id": sample_id,
                             "render_error": None,
+                            "render_flags": [],
                             "rendered": None,
                             "input_ids": None,
                         }
                         try:
-                            rendered = render_prompt(source_text, tokenizer, cfg)
+                            rendered = render_prompt(
+                                source_text, tokenizer, cfg, built["render_flags"]
+                            )
                             built["rendered"] = rendered
-                            encoded = tokenizer(rendered, return_tensors="pt")
+                            encoded = _encode_rendered(
+                                rendered,
+                                processor=processor,
+                                tokenizer=tokenizer,
+                                multimodal=multimodal,
+                            )
                             input_ids = encoded["input_ids"][0]
                             if int(input_ids.shape[-1]) > cfg.max_input_tokens:
                                 raise PromptRejection(
@@ -1479,12 +1582,12 @@ def run_generation(
                             )
                         elapsed = time.perf_counter() - began
                         per_sample_seconds.append(elapsed / max(1, len(runnable)))
-                        new_tokens = output[:, max_len:]
                         for index, item in enumerate(runnable):
-                            token_ids = new_tokens[index].tolist()
+                            token_ids, raw = _decode_new_tokens(
+                                output, max_len, tokenizer, row=index
+                            )
                             eos_id = tokenizer.eos_token_id
                             finish_reason = "eos" if eos_id in token_ids else "length"
-                            raw = tokenizer.decode(token_ids, skip_special_tokens=True)
                             generated[id(item)] = (raw, finish_reason)
 
                     for batch_index, item in enumerate(prepared):
@@ -1537,6 +1640,8 @@ def run_generation(
                                 finish_reason, cfg,
                             )
 
+                        quality_flags = list(item["render_flags"]) + list(flags)
+
                         if reason is not None:
                             failure = GenerationFailure(
                                 **common,
@@ -1545,7 +1650,7 @@ def run_generation(
                                 attempt=attempt,
                                 raw_text_hash=_sha256_text(raw),
                                 finish_reason=finish_reason,
-                                quality_flags=flags,
+                                quality_flags=quality_flags,
                                 generated_text=generated_text or None,
                                 generated_text_hash=(
                                     _sha256_text(generated_text)
@@ -1573,7 +1678,7 @@ def run_generation(
                                 generated_text=generated_text,
                                 generated_text_hash=_sha256_text(generated_text),
                                 finish_reason=finish_reason,
-                                quality_flags=flags,
+                                quality_flags=quality_flags,
                             )
                             append_record(paths["samples"], record)
                             ok_ids.add(sample_id)
@@ -1593,6 +1698,9 @@ def run_generation(
 
             flush_state()
             del model
+            del tokenizer
+            if processor is not None:
+                del processor
             gc.collect()
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()

@@ -50,12 +50,12 @@ evaluation-only in this project by policy, enforced in `ml/audit/audit.py` and t
 |---|---|---|
 | `distilbert-base-cased` | Apache-2.0 | detector (E1, and the E2-C1 architecture) |
 | `mistralai/Mistral-7B-Instruct-v0.2` | Apache-2.0 | generator for E2-C1 |
-| `meta-llama/Llama-3.2-3B-Instruct` | Llama 3.2 Community License | generator for E2-C1 |
+| `Qwen/Qwen3.5-4B` | Apache-2.0 | generator for E2-C1 (active) |
+| `meta-llama/Llama-3.2-3B-Instruct` | Llama 3.2 Community License | **not used**: HF access pending review (2026-11-08) |
 
-No weights are distributed here. See `docs/e2/model-licence-audit.md` for the clause-level audit,
-including the correction that Llama 3.2 is **not** Apache-2.0, the gated-access requirement, and the
-naming obligation in Llama 3.2 section 1.b.i if a detector trained on its outputs is ever
-distributed.
+No weights are distributed here. See `docs/e2/model-licence-audit.md` for the clause-level audit.
+That document also records two corrections: Llama 3.2 is **not** Apache-2.0, and it is no longer an
+active generator because its access request is pending (amendment dated 2026-11-08).
 
 ## Generated text
 
@@ -63,8 +63,8 @@ No generated corpus is distributed. This matters because **neither weight licenc
 model outputs**:
 
 - Apache-2.0 licenses the Work (software and weights) and is silent on outputs.
-- The Llama 3.2 Community License addresses outputs only to disclaim warranties and place
-  responsibility on the licensee.
+- The Llama 3.2 Community License (retained as historical evidence only) addresses outputs only to
+  disclaim warranties and place responsibility on the licensee.
 
 Generated text is therefore recorded in the pipeline as `outputs_licensed: false`. Its standalone
 copyright status is uncertain and jurisdiction-dependent. If you generate a corpus with this code,
