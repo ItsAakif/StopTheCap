@@ -266,6 +266,36 @@ def test_gate_cell_fails_closed_before_any_model_load(notebook):
     assert source.index('"status": "blocked"') < source.index("raise RuntimeError")
 
 
+def test_gate_cell_makes_token_optional_for_ungated_models(notebook):
+    source = _source(notebook["cells"][16])
+
+    # The token requirement is derived from the registry, not assumed.
+    assert "needs_token = any(" in source
+    assert 'entry.get("gated") is True' in source
+    assert "token required:" in source
+    assert "resolved = [" in source
+
+    # Ungated configs proceed without a token and cannot raise.
+    assert "if not needs_token:" in source
+    assert "No gated models in the generation config; HF token is optional." in source
+    ungated = source[source.index("if not needs_token:"):source.index("api = HfApi()")]
+    assert "_blocked_report" not in ungated
+    assert "raise " not in ungated
+
+    # Gated configs without a token keep the blocked-report hard stop.
+    assert "if needs_token and not token:" in source
+    gated = source[
+        source.index("if needs_token and not token:"):source.index("if not needs_token:")
+    ]
+    assert "_blocked_report(" in gated
+    assert "_atomic_write_report(REPORT_PATH, payload)" in gated
+    assert "raise RuntimeError" in gated
+
+    # Model resolution is attempted for every model, with the (possibly absent) token.
+    assert "model_info(" in source
+    assert "token=token" in source
+
+
 # ---------------------------------------------------------------------------
 # Cell 18: smoke subprocess
 # ---------------------------------------------------------------------------
