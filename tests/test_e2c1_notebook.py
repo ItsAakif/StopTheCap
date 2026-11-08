@@ -168,6 +168,7 @@ def test_dependency_cell_installs_and_imports_every_required_package(notebook):
     source = _source(notebook["cells"][8])
     pip_line = next(line for line in source.splitlines() if "%pip install" in line)
 
+    assert "transformers>=5.22" in pip_line
     for package in (
         "transformers",
         "accelerate",

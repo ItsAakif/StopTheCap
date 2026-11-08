@@ -1186,6 +1186,28 @@ def _sha256_text(text: str) -> str:
 # ---------------------------------------------------------------------------
 
 
+def _from_pretrained_with_dtype(
+    model_cls: Any,
+    model_id: str,
+    *,
+    dtype: Any,
+    **kwargs: Any,
+) -> Any:
+    """Load a model with the transformers-5 ``dtype`` kwarg, falling back once.
+
+    Transformers 5 renamed the ``from_pretrained`` dtype kwarg from ``torch_dtype``
+    to ``dtype``. Older releases reject the unknown keyword with ``TypeError``, so
+    retry with the legacy name only for that specific failure.
+    """
+    try:
+        return model_cls.from_pretrained(model_id, dtype=dtype, **kwargs)
+    except TypeError as exc:
+        message = str(exc).lower()
+        if "dtype" not in message and "unexpected keyword" not in message:
+            raise
+    return model_cls.from_pretrained(model_id, torch_dtype=dtype, **kwargs)
+
+
 def _load_generator(
     generator: GeneratorConfig,
     *,
@@ -1208,10 +1230,11 @@ def _load_generator(
             generator.model_id, revision=generator.model_revision
         )
         tokenizer = getattr(processor, "tokenizer", processor)
-        model = auto_model_image_text.from_pretrained(
+        model = _from_pretrained_with_dtype(
+            auto_model_image_text,
             generator.model_id,
+            dtype=torch.float16,
             revision=generator.model_revision,
-            torch_dtype=torch.float16,
             device_map="cuda",
         )
         multimodal = True
@@ -1241,12 +1264,16 @@ def _load_generator(
                 ),
                 bnb_4bit_compute_dtype=compute_dtype,
             )
+            model = auto_model_causal.from_pretrained(
+                generator.model_id, **load_kwargs
+            )
         else:
-            load_kwargs["torch_dtype"] = dtype
-
-        model = auto_model_causal.from_pretrained(
-            generator.model_id, **load_kwargs
-        )
+            model = _from_pretrained_with_dtype(
+                auto_model_causal,
+                generator.model_id,
+                dtype=dtype,
+                **load_kwargs,
+            )
         processor = None
         multimodal = False
 

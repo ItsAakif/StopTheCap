@@ -517,7 +517,7 @@ def test_multimodal_spec_uses_autoprocessor_and_image_text_model(config):
     assert model_id == generator.model_id
     assert kwargs == {
         "revision": generator.model_revision,
-        "torch_dtype": FakeTorch.float16,
+        "dtype": FakeTorch.float16,
         "device_map": "cuda",
     }
 
@@ -537,6 +537,77 @@ def test_causal_spec_uses_autotokenizer_and_causal_model(config):
         (generator.model_id, generator.model_revision)
     ]
     assert len(FakeAutoModelForCausalLM.calls) == 1
+
+
+class LegacyDtypeAutoModel:
+    """Fake pre-transformers-5 loader: rejects ``dtype``, accepts ``torch_dtype``."""
+
+    calls: list[tuple[str, dict]] = []
+
+    @classmethod
+    def from_pretrained(cls, model_id, **kwargs):
+        cls.calls.append((model_id, dict(kwargs)))
+        if "dtype" in kwargs:
+            raise TypeError("unexpected keyword argument 'dtype'")
+        return "MODEL"
+
+
+def test_multimodal_dtype_falls_back_to_torch_dtype(config):
+    generator = next(
+        entry for entry in config.generators if entry.loader == "multimodal"
+    )
+    LegacyDtypeAutoModel.calls = []
+
+    _processor, _tokenizer, model, multimodal = _load_generator(
+        generator,
+        torch=FakeTorch,
+        transformers=FakeTransformers,
+        auto_tokenizer=FakeAutoTokenizer,
+        auto_model_causal=FakeAutoModelForCausalLM,
+        auto_processor=FakeAutoProcessor,
+        auto_model_image_text=LegacyDtypeAutoModel,
+    )
+
+    assert model == "MODEL"
+    assert multimodal is True
+    assert len(LegacyDtypeAutoModel.calls) == 2
+    first = LegacyDtypeAutoModel.calls[0][1]
+    second = LegacyDtypeAutoModel.calls[1][1]
+    assert first["dtype"] == FakeTorch.float16
+    assert "torch_dtype" not in first
+    assert second["torch_dtype"] == FakeTorch.float16
+    assert "dtype" not in second
+
+
+def test_causal_dtype_falls_back_to_torch_dtype(config):
+    generator = next(
+        entry for entry in config.generators if entry.loader == "causal"
+    ).model_copy(deep=True)
+    generator.quantisation.method = "none"
+    LegacyDtypeAutoModel.calls = []
+
+    processor, _tokenizer, model, multimodal = _load_generator(
+        generator,
+        torch=FakeTorch,
+        transformers=FakeTransformers,
+        auto_tokenizer=FakeAutoTokenizer,
+        auto_model_causal=LegacyDtypeAutoModel,
+        auto_processor=FakeAutoProcessor,
+        auto_model_image_text=FakeAutoModelForImageTextToText,
+    )
+
+    assert processor is None
+    assert multimodal is False
+    assert model == "MODEL"
+    assert len(LegacyDtypeAutoModel.calls) == 2
+    first = LegacyDtypeAutoModel.calls[0][1]
+    second = LegacyDtypeAutoModel.calls[1][1]
+    assert first["dtype"] == FakeTorch.float16
+    assert "torch_dtype" not in first
+    assert second["torch_dtype"] == FakeTorch.float16
+    assert "dtype" not in second
+    assert first["revision"] == generator.model_revision
+    assert second["revision"] == generator.model_revision
 
 
 def test_multimodal_encode_uses_processor_text_list(config):
