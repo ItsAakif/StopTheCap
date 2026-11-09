@@ -6,12 +6,14 @@ Every test is offline: no GPU, no network, no real prompt/split manifest and no
 
 from __future__ import annotations
 
+import contextlib
 import copy
 import hashlib
 import json
 import random
 import subprocess
 import sys
+import types
 from pathlib import Path
 
 import pytest
@@ -240,6 +242,12 @@ def test_config_unknown_field_rejected(tmp_path):
         GenerationConfig.model_validate(payload)
 
 
+def test_config_throughput_settings(config):
+    assert config.batch_size == 8
+    assert config.prompt_template_id == "e2c1-wiki-passage-v2"
+    assert {decoding.max_new_tokens for decoding in config.decodings} == {192}
+
+
 # ---------------------------------------------------------------------------
 # Licence validation
 # ---------------------------------------------------------------------------
@@ -327,12 +335,15 @@ class FakeTokenizer:
     def __init__(self) -> None:
         self.calls: list[dict] = []
 
-    def apply_chat_template(self, messages, tokenize, add_generation_prompt):
+    def apply_chat_template(
+        self, messages, tokenize, add_generation_prompt, **kwargs
+    ):
         self.calls.append(
             {
                 "messages": messages,
                 "tokenize": tokenize,
                 "add_generation_prompt": add_generation_prompt,
+                "enable_thinking": kwargs.get("enable_thinking"),
             }
         )
         return "RENDERED"
@@ -346,6 +357,7 @@ def test_render_prompt_messages_and_word_range(config):
     call = tokenizer.calls[0]
     assert call["tokenize"] is False
     assert call["add_generation_prompt"] is True
+    assert call["enable_thinking"] is False
     assert [message["role"] for message in call["messages"]] == ["system", "user"]
 
     system = call["messages"][0]["content"]
@@ -355,8 +367,32 @@ def test_render_prompt_messages_and_word_range(config):
     )
     assert "<<<SOURCE" in user and "SOURCE>>>" in user
     assert "The source passage." in user
-    assert "100-150 words" in user
-    assert "120-180 words" not in user
+    assert "90-120 words" in user
+    assert "100-150 words" not in user
+
+
+def test_render_prompt_omits_enable_thinking_when_template_rejects_kwarg(config):
+    class RejectingTokenizer:
+        def __init__(self) -> None:
+            self.calls: list[dict] = []
+
+        def apply_chat_template(
+            self, messages, tokenize, add_generation_prompt, **kwargs
+        ):
+            if "enable_thinking" in kwargs:
+                raise TypeError("unexpected keyword argument 'enable_thinking'")
+            self.calls.append({"messages": messages})
+            return "NO_THINKING_KWARG"
+
+    tokenizer = RejectingTokenizer()
+    thinking_state: dict[str, bool] = {}
+    result = render_prompt(
+        "The source passage.", tokenizer, config, thinking_state=thinking_state
+    )
+
+    assert result == "NO_THINKING_KWARG"
+    assert len(tokenizer.calls) == 1
+    assert thinking_state == {"thinking_disabled": False}
 
 
 def test_render_prompt_rejects_delimiter_collision(config):
@@ -371,7 +407,9 @@ class SystemRejectingTokenizer:
     def __init__(self) -> None:
         self.calls: list[list[dict]] = []
 
-    def apply_chat_template(self, messages, tokenize, add_generation_prompt):
+    def apply_chat_template(
+        self, messages, tokenize, add_generation_prompt, **kwargs
+    ):
         self.calls.append(messages)
         if any(message["role"] == "system" for message in messages):
             raise ValueError("System role is not supported by this chat template")
@@ -385,8 +423,10 @@ def test_render_prompt_merges_system_role_when_template_rejects_it(config):
 
     assert result == "MERGED"
     assert flags == ["system_role_merged"]
-    assert len(tokenizer.calls) == 2
-    retry = tokenizer.calls[1]
+    # Two rejected system attempts (with and without the thinking kwarg), then
+    # the merged user-only attempt.
+    assert len(tokenizer.calls) == 3
+    retry = tokenizer.calls[-1]
     assert [message["role"] for message in retry] == ["user"]
     assert retry[0]["content"].startswith(
         "You are a careful encyclopedic writer. You never copy source sentences."
@@ -519,6 +559,7 @@ def test_multimodal_spec_uses_autoprocessor_and_image_text_model(config):
         "revision": generator.model_revision,
         "dtype": FakeTorch.float16,
         "device_map": "cuda",
+        "attn_implementation": "sdpa",
     }
 
 
@@ -610,6 +651,109 @@ def test_causal_dtype_falls_back_to_torch_dtype(config):
     assert second["revision"] == generator.model_revision
 
 
+class AttnRejectingAutoModel:
+    """Fake loader that refuses ``attn_implementation`` and records both calls."""
+
+    calls: list[dict] = []
+    error: Exception = NotImplementedError(
+        "attn_implementation is not supported"
+    )
+
+    @classmethod
+    def from_pretrained(cls, model_id, **kwargs):
+        cls.calls.append(dict(kwargs))
+        if "attn_implementation" in kwargs:
+            raise cls.error
+        return "MODEL"
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        TypeError("unexpected keyword argument 'attn_implementation'"),
+        ValueError("attn_implementation is not supported"),
+        NotImplementedError("attn_implementation is not supported"),
+    ],
+)
+def test_attn_implementation_falls_back_and_is_recorded(config, error):
+    generator = next(
+        entry for entry in config.generators if entry.loader == "causal"
+    ).model_copy(deep=True)
+    generator.quantisation.method = "none"
+    AttnRejectingAutoModel.calls = []
+    AttnRejectingAutoModel.error = error
+    attn_state: dict = {}
+
+    _processor, _tokenizer, model, _multimodal = _load_generator(
+        generator,
+        torch=FakeTorch,
+        transformers=FakeTransformers,
+        auto_tokenizer=FakeAutoTokenizer,
+        auto_model_causal=AttnRejectingAutoModel,
+        auto_processor=FakeAutoProcessor,
+        auto_model_image_text=FakeAutoModelForImageTextToText,
+        attn_state=attn_state,
+    )
+
+    assert model == "MODEL"
+    assert len(AttnRejectingAutoModel.calls) == 2
+    assert AttnRejectingAutoModel.calls[0]["attn_implementation"] == "sdpa"
+    assert "attn_implementation" not in AttnRejectingAutoModel.calls[1]
+    assert attn_state["attn_implementation"] == "default"
+
+
+def test_multimodal_attn_implementation_falls_back(config):
+    generator = next(
+        entry for entry in config.generators if entry.loader == "multimodal"
+    )
+    AttnRejectingAutoModel.calls = []
+    AttnRejectingAutoModel.error = TypeError(
+        "unexpected keyword argument 'attn_implementation'"
+    )
+    attn_state: dict = {}
+
+    _processor, _tokenizer, model, multimodal = _load_generator(
+        generator,
+        torch=FakeTorch,
+        transformers=FakeTransformers,
+        auto_tokenizer=FakeAutoTokenizer,
+        auto_model_causal=FakeAutoModelForCausalLM,
+        auto_processor=FakeAutoProcessor,
+        auto_model_image_text=AttnRejectingAutoModel,
+        attn_state=attn_state,
+    )
+
+    assert model == "MODEL"
+    assert multimodal is True
+    assert len(AttnRejectingAutoModel.calls) == 2
+    assert AttnRejectingAutoModel.calls[0]["attn_implementation"] == "sdpa"
+    assert "attn_implementation" not in AttnRejectingAutoModel.calls[1]
+    assert attn_state["attn_implementation"] == "default"
+
+
+def test_attn_implementation_sdpa_is_recorded_when_accepted(config):
+    generator = next(
+        entry for entry in config.generators if entry.loader == "causal"
+    ).model_copy(deep=True)
+    generator.quantisation.method = "none"
+    FakeAutoModelForCausalLM.calls = []
+    attn_state: dict = {}
+
+    _load_generator(
+        generator,
+        torch=FakeTorch,
+        transformers=FakeTransformers,
+        auto_tokenizer=FakeAutoTokenizer,
+        auto_model_causal=FakeAutoModelForCausalLM,
+        auto_processor=FakeAutoProcessor,
+        auto_model_image_text=FakeAutoModelForImageTextToText,
+        attn_state=attn_state,
+    )
+
+    assert attn_state["attn_implementation"] == "sdpa"
+    assert FakeAutoModelForCausalLM.calls[0][1]["attn_implementation"] == "sdpa"
+
+
 def test_multimodal_encode_uses_processor_text_list(config):
     generator = next(
         entry for entry in config.generators if entry.loader == "multimodal"
@@ -677,6 +821,23 @@ def test_postprocess_short(config):
 def test_postprocess_truncated(config):
     _text, _flags, reason = postprocess(passage(60), source_text(), "length", config)
     assert reason == "truncated"
+
+
+def test_postprocess_strips_thinking_block(config):
+    raw = "<think>reasoning tokens</think>\n" + passage(60, "afterthink")
+    text, flags, reason = postprocess(raw, source_text(), "eos", config)
+
+    assert reason is None
+    assert text == passage(60, "afterthink")
+    assert "thinking_stripped" in flags
+
+
+def test_postprocess_leaves_unclosed_thinking_block(config):
+    raw = "<think>reasoning tokens without a closing tag " + passage(60)
+    _text, flags, reason = postprocess(raw, source_text(), "length", config)
+
+    assert reason == "truncated"
+    assert "thinking_stripped" not in flags
 
 
 def test_postprocess_refusal(config):
@@ -1033,6 +1194,223 @@ def test_plan_only_does_not_import_torch(config, tmp_path, monkeypatch):
     )
     assert report["mode"] == "plan-only"
     assert report["sample_id_count"] == 16
+
+
+# ---------------------------------------------------------------------------
+# End-to-end smoke run against a fake torch/transformers model
+# ---------------------------------------------------------------------------
+
+
+class _FakeTensor:
+    """Minimal 1-D/2-D integer tensor for the run_generation batching path."""
+
+    def __init__(self, rows):
+        self.rows = rows
+
+    @property
+    def shape(self):
+        if self.rows and isinstance(self.rows[0], list):
+            return (len(self.rows), len(self.rows[0]))
+        return (len(self.rows),)
+
+    def to(self, _device):
+        return self
+
+    def __getitem__(self, key):
+        if isinstance(key, tuple):
+            row, selection = key
+            assert isinstance(selection, slice)
+            return _Row(self.rows[row][selection])
+        value = self.rows[key]
+        return _FakeTensor(value) if isinstance(value, list) else value
+
+    def __setitem__(self, key, value):
+        if isinstance(key, tuple):
+            row, selection = key
+            target = self.rows[row]
+            if isinstance(value, _FakeTensor):
+                values = list(value.rows)
+            elif isinstance(value, (list, tuple)):
+                values = list(value)
+            else:
+                for index in range(*selection.indices(len(target))):
+                    target[index] = value
+                return
+            target[selection] = values
+            return
+        self.rows[key] = value
+
+
+class _RunTokenizer:
+    def __init__(self, texts: list[str]) -> None:
+        self.chat_template = "chat-template"
+        self.pad_token_id = 0
+        self.eos_token_id = 2
+        self.pad_token = "<pad>"
+        self.texts = list(texts)
+        self.template_calls: list[dict] = []
+        self.decoded: list[list[int]] = []
+
+    def apply_chat_template(
+        self, messages, tokenize, add_generation_prompt, **kwargs
+    ):
+        self.template_calls.append(dict(kwargs))
+        return "RENDERED"
+
+    def __call__(self, text, return_tensors):
+        return {"input_ids": _FakeTensor([[101, 102, 103]])}
+
+    def decode(self, token_ids, skip_special_tokens):
+        self.decoded.append(list(token_ids))
+        return self.texts.pop(0)
+
+
+class _RunModel:
+    def __init__(self, torch_module, eos_token_id: int = 2) -> None:
+        self.torch = torch_module
+        self.eos_token_id = eos_token_id
+        self.generate_calls: list[dict] = []
+        self.to_calls: list[str] = []
+        self.eval_called = False
+
+    def to(self, device):
+        self.to_calls.append(device)
+        return self
+
+    def eval(self):
+        self.eval_called = True
+        return self
+
+    def generate(self, input_ids, attention_mask, **kwargs):
+        self.generate_calls.append(
+            {
+                "kwargs": dict(kwargs),
+                "inference_mode": self.torch.inference_mode_active,
+            }
+        )
+        batch_size = input_ids.shape[0]
+        length = input_ids.shape[1] + 1
+        rows = [[self.eos_token_id] * length for _ in range(batch_size)]
+        return _FakeTensor(rows)
+
+
+def _fake_torch_module():
+    module = types.ModuleType("torch")
+    module.float16 = "float16"
+    module.bfloat16 = "bfloat16"
+    module.float32 = "float32"
+    module.long = "long"
+    module.inference_mode_active = False
+
+    @contextlib.contextmanager
+    def inference_mode():
+        module.inference_mode_active = True
+        try:
+            yield
+        finally:
+            module.inference_mode_active = False
+
+    def no_grad():  # pragma: no cover - only called if the no_grad path regresses
+        raise AssertionError("torch.no_grad() must not be used")
+
+    module.inference_mode = inference_mode
+    module.no_grad = no_grad
+    module.full = lambda shape, value, dtype=None: _FakeTensor(
+        [[value] * shape[1] for _ in range(shape[0])]
+    )
+    module.zeros_like = lambda tensor: _FakeTensor(
+        [[0] * len(row) for row in tensor.rows]
+    )
+    module.manual_seed = lambda seed: None
+
+    class _Cuda:
+        @staticmethod
+        def is_available():
+            return False
+
+        @staticmethod
+        def empty_cache():
+            return None
+
+    module.cuda = _Cuda()
+    return module
+
+
+def _fake_transformers_module():
+    module = types.ModuleType("transformers")
+    module.set_seed = lambda seed: None
+    module.BitsAndBytesConfig = lambda **kwargs: dict(kwargs)
+    module.AutoTokenizer = FakeAutoTokenizer
+    module.AutoModelForCausalLM = FakeAutoModelForCausalLM
+    module.AutoProcessor = FakeAutoProcessor
+    module.AutoModelForImageTextToText = FakeAutoModelForImageTextToText
+    return module
+
+
+def test_smoke_run_uses_inference_mode_and_reports_diagnostics(
+    config, tmp_path, monkeypatch
+):
+    import ml.e2c1.generation as generation_module
+
+    fake_torch = _fake_torch_module()
+    monkeypatch.setitem(sys.modules, "torch", fake_torch)
+    monkeypatch.setitem(sys.modules, "transformers", _fake_transformers_module())
+
+    tokenizer = _RunTokenizer(
+        [passage(60, "generatedword"), passage(5, "shortword")]
+    )
+    model = _RunModel(fake_torch)
+
+    def fake_load(generator, **kwargs):
+        attn_state = kwargs.get("attn_state")
+        if attn_state is not None:
+            attn_state["attn_implementation"] = "sdpa"
+        return None, tokenizer, model, False
+
+    monkeypatch.setattr(generation_module, "_load_generator", fake_load)
+
+    smoke_config = config.model_copy(deep=True)
+    smoke_config.generators = [config.generators[0]]
+    smoke_config.decodings = [config.decodings[0]]
+
+    rows = make_prompt_rows(2)
+    assignments = {row["prompt_id"]: "train" for row in rows}
+    prompt_path = tmp_path / "prompts.jsonl"
+    prompt_sha = write_prompt_manifest(prompt_path, rows)
+    split_path = tmp_path / "splits.json"
+    write_split_manifest(split_path, rows, assignments, prompt_sha)
+
+    report = run_generation(
+        smoke_config,
+        prompts_path=prompt_path,
+        splits_path=split_path,
+        out_dir=tmp_path / "run",
+        smoke=2,
+    )
+
+    generator_id = config.generators[0].generator_id
+    assert report["n_records"] == 1
+    assert report["n_failures"] == 1
+    assert report["rejections"] == {"length_short": 1}
+    assert len(report["rejected_examples"]) == 1
+    example = report["rejected_examples"][0]
+    assert example["generator_id"] == generator_id
+    assert example["decoding_config_id"] == config.decodings[0].decoding_config_id
+    assert example["rejection_reason"] == "length_short"
+    assert example["finish_reason"] == "eos"
+    assert example["text_prefix"].startswith("shortword0")
+    assert report["successes_by_generator"] == {generator_id: 1}
+    assert report["failures_by_generator"] == {generator_id: 1}
+    assert report["thinking_disabled"] is True
+    assert report["thinking_disabled_by_generator"] == {generator_id: True}
+    assert report["attn_implementation"] == "sdpa"
+
+    assert tokenizer.template_calls[0]["enable_thinking"] is False
+    assert model.to_calls == ["cpu"]
+    assert model.eval_called is True
+    assert len(model.generate_calls) == 1
+    assert model.generate_calls[0]["kwargs"]["use_cache"] is True
+    assert model.generate_calls[0]["inference_mode"] is True
 
 
 # ---------------------------------------------------------------------------

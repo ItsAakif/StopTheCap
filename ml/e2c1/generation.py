@@ -428,11 +428,46 @@ USER_TEMPLATE = (
     "<<<SOURCE\n"
     "{source_text}\n"
     "SOURCE>>>\n\n"
-    "Write a new, self-contained encyclopedic passage of 100-150 words about the "
+    "Write a new, self-contained encyclopedic passage of 90-120 words about the "
     "same subject. Use your own wording. Do not quote or paraphrase "
     "sentence-by-sentence. Do not add a title, headings, notes, or commentary. "
     "Begin directly with the passage."
 )
+
+THINKING_DISABLED_KEY = "thinking_disabled"
+_THINKING_KWARG_ERRORS = (TypeError, ValueError)
+
+
+def _apply_chat_template(
+    tokenizer: Any,
+    messages: list[dict[str, str]],
+    *,
+    thinking_state: dict[str, bool] | None = None,
+) -> str:
+    """Render messages, asking the template to suppress reasoning when supported.
+
+    ``enable_thinking=False`` is accepted by Qwen3.5-style templates. Templates
+    that do not understand the keyword (e.g. Mistral) raise ``TypeError`` or
+    ``ValueError``; they are retried without it. ``thinking_state`` records
+    whether the keyword was accepted so :func:`run_generation` can report it.
+    """
+    try:
+        rendered = tokenizer.apply_chat_template(
+            messages,
+            tokenize=False,
+            add_generation_prompt=True,
+            enable_thinking=False,
+        )
+    except _THINKING_KWARG_ERRORS:
+        if thinking_state is not None:
+            thinking_state[THINKING_DISABLED_KEY] = False
+        return tokenizer.apply_chat_template(
+            messages, tokenize=False, add_generation_prompt=True
+        )
+
+    if thinking_state is not None:
+        thinking_state[THINKING_DISABLED_KEY] = True
+    return rendered
 
 
 def render_prompt(
@@ -440,12 +475,14 @@ def render_prompt(
     tokenizer: Any,
     config: Any,
     flags: list[str] | None = None,
+    thinking_state: dict[str, bool] | None = None,
 ) -> str:
     """Render the §D.3 system+user messages with the tokenizer's chat template.
 
-    The instruction is **100-150 words** (not 120-180) so that 256 new tokens
-    rarely truncates the passage. A source text containing a delimiter is rejected
-    as ``prompt_delimiter_collision`` rather than silently corrupting the prompt.
+    The instruction is **90-120 words** so that 160 new tokens rarely truncates
+    the passage. Thinking is disabled when the template supports it. A source text
+    containing a delimiter is rejected as ``prompt_delimiter_collision`` rather
+    than silently corrupting the prompt.
 
     Some chat templates (notably multimodal processor templates) reject a
     ``system`` role. In that case the system text is prepended to the user message
@@ -464,8 +501,8 @@ def render_prompt(
         {"role": "user", "content": user_text},
     ]
     try:
-        return tokenizer.apply_chat_template(
-            messages, tokenize=False, add_generation_prompt=True
+        return _apply_chat_template(
+            tokenizer, messages, thinking_state=thinking_state
         )
     except Exception:
         merged = [
@@ -474,8 +511,8 @@ def render_prompt(
                 "content": f"{SYSTEM_PROMPT}\n\n{user_text}",
             }
         ]
-        rendered = tokenizer.apply_chat_template(
-            merged, tokenize=False, add_generation_prompt=True
+        rendered = _apply_chat_template(
+            tokenizer, merged, thinking_state=thinking_state
         )
         if flags is not None:
             flags.append("system_role_merged")
@@ -552,9 +589,16 @@ def postprocess(
 
     Returns ``(text, flags, rejection_reason)``; ``rejection_reason`` is ``None``
     on success. ``flags`` is retained on the record even when the sample passes.
+    A complete ``</think>`` block is dropped before normalisation; an unclosed
+    ``<think>`` block is left for the ``truncated`` rule to reject.
     """
     rejection = _rejection_config(config)
+    thinking_stripped = "</think>" in raw
+    if thinking_stripped:
+        raw = raw.rsplit("</think>", 1)[1].lstrip()
     text, flags = normalise_and_clean(raw)
+    if thinking_stripped:
+        flags.append("thinking_stripped")
 
     if text[:1] == '"' and text[-1:] == '"' and text.count('"') == 2:
         text = text[1:-1].strip()
@@ -1203,9 +1247,43 @@ def _from_pretrained_with_dtype(
         return model_cls.from_pretrained(model_id, dtype=dtype, **kwargs)
     except TypeError as exc:
         message = str(exc).lower()
-        if "dtype" not in message and "unexpected keyword" not in message:
+        # Only retry when ``dtype`` itself is the offending keyword. Other
+        # unsupported keywords (e.g. ``attn_implementation``) must reach the
+        # attention fallback, not trigger a pointless torch_dtype retry.
+        if "dtype" not in message:
             raise
     return model_cls.from_pretrained(model_id, torch_dtype=dtype, **kwargs)
+
+
+_ATTN_IMPLEMENTATION = "sdpa"
+_ATTN_FALLBACK_ERRORS = (TypeError, ValueError, NotImplementedError)
+
+
+def _load_with_attn(
+    loader: Any,
+    model_id: str,
+    *,
+    attn_state: dict[str, Any] | None = None,
+    **kwargs: Any,
+) -> Any:
+    """Load a model requesting SDPA attention, falling back once if unsupported.
+
+    ``attn_implementation="sdpa"`` is requested unconditionally. A loader that
+    raises ``TypeError``/``ValueError``/``NotImplementedError`` is retried without
+    the keyword; ``attn_state`` records ``"sdpa"`` or ``"default"`` for the report.
+    """
+    try:
+        model = loader(
+            model_id, attn_implementation=_ATTN_IMPLEMENTATION, **kwargs
+        )
+    except _ATTN_FALLBACK_ERRORS:
+        model = loader(model_id, **kwargs)
+        if attn_state is not None:
+            attn_state["attn_implementation"] = "default"
+    else:
+        if attn_state is not None:
+            attn_state["attn_implementation"] = _ATTN_IMPLEMENTATION
+    return model
 
 
 def _load_generator(
@@ -1217,6 +1295,7 @@ def _load_generator(
     auto_model_causal: Any,
     auto_processor: Any,
     auto_model_image_text: Any,
+    attn_state: dict[str, Any] | None = None,
 ) -> tuple[Any | None, Any, Any, bool]:
     """Load ``(processor, tokenizer, model, multimodal)`` for one generator.
 
@@ -1224,16 +1303,29 @@ def _load_generator(
     only ``transformers`` imports live), so this helper stays torch-free at module
     import time and is directly testable with fakes. A multimodal processor also
     supplies the chat template and decoder through its ``tokenizer``.
+
+    ``attn_state`` (when supplied) receives ``attn_implementation`` so the caller
+    can report which attention implementation was actually used.
     """
+
+    def load_with_dtype(model_cls: Any, model_dtype: Any, **kwargs: Any) -> Any:
+        return _load_with_attn(
+            lambda model_id, **extra: _from_pretrained_with_dtype(
+                model_cls, model_id, dtype=model_dtype, **extra
+            ),
+            generator.model_id,
+            attn_state=attn_state,
+            **kwargs,
+        )
+
     if generator.loader == "multimodal":
         processor = auto_processor.from_pretrained(
             generator.model_id, revision=generator.model_revision
         )
         tokenizer = getattr(processor, "tokenizer", processor)
-        model = _from_pretrained_with_dtype(
+        model = load_with_dtype(
             auto_model_image_text,
-            generator.model_id,
-            dtype=torch.float16,
+            torch.float16,
             revision=generator.model_revision,
             device_map="cuda",
         )
@@ -1264,16 +1356,14 @@ def _load_generator(
                 ),
                 bnb_4bit_compute_dtype=compute_dtype,
             )
-            model = auto_model_causal.from_pretrained(
-                generator.model_id, **load_kwargs
-            )
-        else:
-            model = _from_pretrained_with_dtype(
-                auto_model_causal,
+            model = _load_with_attn(
+                auto_model_causal.from_pretrained,
                 generator.model_id,
-                dtype=dtype,
+                attn_state=attn_state,
                 **load_kwargs,
             )
+        else:
+            model = load_with_dtype(auto_model_causal, dtype, **load_kwargs)
         processor = None
         multimodal = False
 
@@ -1476,6 +1566,12 @@ def run_generation(
     n_failures = 0
     failure_report: list[dict[str, Any]] = []
     per_sample_seconds: list[float] = []
+    attn_implementations: dict[str, str] = {}
+    thinking_disabled_by_generator: dict[str, bool] = {}
+    successes_by_generator: dict[str, int] = {}
+    failures_by_generator: dict[str, int] = {}
+    rejections: collections.Counter[str] = collections.Counter()
+    rejected_examples: list[dict[str, Any]] = []
 
     def flush_state() -> None:
         nonlocal records_since_state
@@ -1484,6 +1580,7 @@ def run_generation(
 
     try:
         for generator in generators:
+            attn_state: dict[str, Any] = {}
             processor, tokenizer, model, multimodal = _load_generator(
                 generator,
                 torch=torch,
@@ -1492,7 +1589,14 @@ def run_generation(
                 auto_model_causal=AutoModelForCausalLM,
                 auto_processor=AutoProcessor,
                 auto_model_image_text=AutoModelForImageTextToText,
+                attn_state=attn_state,
             )
+            attn_implementations[generator.generator_id] = str(
+                attn_state.get("attn_implementation", "default")
+            )
+            successes_by_generator.setdefault(generator.generator_id, 0)
+            failures_by_generator.setdefault(generator.generator_id, 0)
+            thinking_state: dict[str, bool] = {}
             quantisation = generator.quantisation.model_dump(mode="json")
             device = "cuda" if torch.cuda.is_available() else "cpu"
             if not multimodal:
@@ -1554,7 +1658,11 @@ def run_generation(
                         }
                         try:
                             rendered = render_prompt(
-                                source_text, tokenizer, cfg, built["render_flags"]
+                                source_text,
+                                tokenizer,
+                                cfg,
+                                built["render_flags"],
+                                thinking_state=thinking_state,
                             )
                             built["rendered"] = rendered
                             encoded = _encode_rendered(
@@ -1595,13 +1703,14 @@ def run_generation(
                             "max_new_tokens": decoding.max_new_tokens,
                             "do_sample": decoding.do_sample,
                             "pad_token_id": pad_id,
+                            "use_cache": True,
                         }
                         if decoding.do_sample:
                             sample_kwargs["temperature"] = decoding.temperature
                             sample_kwargs["top_p"] = decoding.top_p
 
                         began = time.perf_counter()
-                        with torch.no_grad():
+                        with torch.inference_mode():
                             output = model.generate(
                                 input_ids=input_ids,
                                 attention_mask=attention,
@@ -1688,6 +1797,19 @@ def run_generation(
                             append_record(paths["failures"], failure)
                             failed[sample_id] = attempt
                             n_failures += 1
+                            rejections[reason] += 1
+                            failures_by_generator[generator.generator_id] += 1
+                            if len(rejected_examples) < 3:
+                                rejected_text = generated_text or raw or ""
+                                rejected_examples.append(
+                                    {
+                                        "generator_id": generator.generator_id,
+                                        "decoding_config_id": decoding.decoding_config_id,
+                                        "rejection_reason": reason,
+                                        "finish_reason": finish_reason,
+                                        "text_prefix": rejected_text[:120],
+                                    }
+                                )
                             failure_report.append(
                                 {
                                     "sample_id": sample_id,
@@ -1710,6 +1832,7 @@ def run_generation(
                             append_record(paths["samples"], record)
                             ok_ids.add(sample_id)
                             n_records += 1
+                            successes_by_generator[generator.generator_id] += 1
                             entry = state["streams"].setdefault(
                                 stream_id, {"ok": [], "failed": {}, "last_offset": 0}
                             )
@@ -1723,6 +1846,9 @@ def run_generation(
                         if records_since_state >= STATE_FLUSH_EVERY:
                             flush_state()
 
+            thinking_disabled_by_generator[generator.generator_id] = bool(
+                thinking_state.get(THINKING_DISABLED_KEY, False)
+            )
             flush_state()
             del model
             del tokenizer
@@ -1750,6 +1876,19 @@ def run_generation(
         stream_counts[stream_id]["ok"] = len(entry.get("ok", []))
         stream_counts[stream_id]["failed"] = len(entry.get("failed", {}))
 
+    unique_attn = set(attn_implementations.values())
+    attn_summary: Any = (
+        next(iter(unique_attn))
+        if len(unique_attn) == 1
+        else dict(sorted(attn_implementations.items()))
+    )
+    diagnostics = {
+        "rejections": dict(sorted(rejections.items())),
+        "rejected_examples": rejected_examples,
+        "successes_by_generator": dict(sorted(successes_by_generator.items())),
+        "failures_by_generator": dict(sorted(failures_by_generator.items())),
+    }
+
     report = {
         **plan,
         "status": "ok",
@@ -1761,6 +1900,15 @@ def run_generation(
         "stream_counts": stream_counts,
         "state_repaired": state.get("state_repaired", 0),
         "corpus_written": mode == "full",
+        "thinking_disabled": any(thinking_disabled_by_generator.values()),
+        "thinking_disabled_by_generator": dict(
+            sorted(thinking_disabled_by_generator.items())
+        ),
+        "attn_implementation": attn_summary,
+        "attn_implementation_by_generator": dict(
+            sorted(attn_implementations.items())
+        ),
+        **diagnostics,
         "full_run": {
             "authorised": bool(authorise_full_run),
             "requested_n": total_expected_ids,
@@ -1781,6 +1929,7 @@ def run_generation(
             "n_records": n_records,
             "prompt_ids": [str(prompt["prompt_id"]) for prompt in selected_prompts],
             "failures": failure_report,
+            **diagnostics,
         }
 
     if report_path is not None:

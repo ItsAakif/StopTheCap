@@ -7,8 +7,8 @@
   "licence_registry": "datasets/manifests/e2_c1_licences.json",
   "expected_prompts": 5000,
   "partitions": ["train", "val", "test_holdout"],
-  "batch_size": 4,
-  "prompt_template_id": "e2c1-wiki-passage-v1",
+  "batch_size": 8,
+  "prompt_template_id": "e2c1-wiki-passage-v2",
   "max_input_tokens": 1024,
   "generators": [
     {
@@ -37,9 +37,9 @@
   ],
   "decodings": [
     {"decoding_config_id": "greedy", "do_sample": false,
-     "temperature": 1.0, "top_p": 1.0, "max_new_tokens": 256, "seed_policy": "per_batch"},
+     "temperature": 1.0, "top_p": 1.0, "max_new_tokens": 192, "seed_policy": "per_batch"},
     {"decoding_config_id": "sampling", "do_sample": true,
-     "temperature": 0.8, "top_p": 0.95, "max_new_tokens": 256, "seed_policy": "per_batch"}
+     "temperature": 0.8, "top_p": 0.95, "max_new_tokens": 192, "seed_policy": "per_batch"}
   ],
   "rejection": {"min_words": 40, "echo_jaccard": 0.30, "echo_containment": 0.20,
                 "max_shared_12grams": 0, "repeat_ratio": 0.50,
