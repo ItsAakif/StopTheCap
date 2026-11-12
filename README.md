@@ -1,13 +1,24 @@
 ﻿# StopTheCap
 
-Detection of AI-generated content and evidence-based fact-checking, built as a reproducible
-research artefact rather than a wrapper around someone else's API.
+[![ci](https://github.com/ItsAakif/StopTheCap/actions/workflows/ci.yml/badge.svg)](https://github.com/ItsAakif/StopTheCap/actions/workflows/ci.yml)
+[![model](https://img.shields.io/badge/model-StopTheCap--E2C1--distilbert-yellow)](https://huggingface.co/itsaakif/StopTheCap-E2C1-distilbert)
+
+Detection of AI-generated content, built as a reproducible research artefact rather than a
+wrapper around someone else's API. The fact-checking component is not started.
 
 **Non-commercial research.** The code is Apache-2.0. Third-party text, datasets and model weights
 keep their own terms - see [DATA_LICENCES.md](DATA_LICENCES.md). Nothing in this repository is
 legal advice.
 
 ---
+
+## Summary
+
+- **E1** (DistilBERT on Ghostbuster) reaches **0.999 in-domain** but only **0.532 ROC-AUC on RAID** - chance.
+- **E2-C1** tested two self-generated corpora. Both reach **1.000 in-domain** and **0.367-0.447 on HC3** / **0.375-0.377 on RAID**, with human false-positive rates of **42-88%**.
+- The corpora were separable by **shortcut features** (word count first, then paragraph and digit density), so the model learned the corpus, not authorship. The failing gate is recorded in the manifests.
+- **One positive result:** a 3-class generator-attribution model separates DeepSeek / Muse Spark / LongCat at **95.1% accuracy, 0.84 macro-F1**.
+- The trained essay detector is published on Hugging Face as a **research artefact, not a usable detector**.
 
 ## Status
 
@@ -19,7 +30,7 @@ legal advice.
 | Video detection | pipeline validated on CPU; detector not selected - [docs/video-alternatives.md](docs/video-alternatives.md) |
 | Fact checker | not started |
 
-## Headline results (E1, frozen)
+## E1 baseline (frozen)
 
 | Evaluation set | ROC-AUC | Note |
 |---|---:|---|
@@ -51,24 +62,38 @@ and at-or-below-chance ranking on HC3/RAID. The shortcut gate caught the cause: 
 then paragraph and digit density. The essay detector is published as a research artefact, not a
 usable detector.
 
-## What exists today
+## Quick start
 
-```
+```bash
+python -m pip install "numpy>=2.0" "pydantic>=2.7" "PyYAML>=6.0" "scikit-learn>=1.4" "pytest>=8.0"
+
 python -m ml.cli build     # records -> splits -> datasets/manifests/COMBINED.yaml
 python -m ml.cli audit     # 12 gates -> reports/audit.{md,json}
-python -m pytest -q        # 398 tests
+python -m pytest -q        # 520 tests
 ```
 
-E2-C1 tooling:
+Requirements: Python 3.12+ with `numpy`, `pydantic`, `PyYAML`, `scikit-learn` and `pytest`.
+Training, generation and export additionally need `torch`/`transformers` and run on Colab or Kaggle, never locally.
 
-```
-python -m ml.e2c1.build_prompts_wikitext   # rebuild the 5,000-prompt inventory (network)
-python -m ml.e2c1.build_splits             # prompt-level 80/10/10 split (offline)
+## Reproduce E2-C1
+
+The canonical corpora are not distributed. The builders regenerate them from the committed prompt
+inventories, manifests and the third-party records; generation itself calls external APIs and needs
+credentials, so it is reproducible only up to the generation step.
+
+```bash
+python -m ml.e2c1.build_prompts_wikitext   # 5,000-prompt inventory (network)
+python -m ml.e2c1.build_splits             # prompt-level 80/10/10 split
 python -m ml.e2c1.generate --help          # generation runner; full run needs --authorise-full-run
+python -m ml.e2c1.merge_api_shards --help  # merge API generation shards
+python -m ml.e2c1.build_training_corpus    # 23,774-row short-form corpus
+python -m ml.e2c1.build_essay_corpus       # 2,178-row length-matched essay corpus
+python -m ml.train.train_e2c1 --corpus datasets/canonical/e2c1_essays.jsonl --manifest datasets/manifests/e2_c1_essays.json --device cuda --out reports/E2C1_essays
+python -m ml.train.export_checkpoint --checkpoint reports/E2C1_essays/checkpoints/last.pt --out reports/E2C1_essays/export
 ```
 
-Requirements: Python 3.12+ with `numpy`, `pydantic`, `PyYAML`, `scikit-learn`, `pytest`. Training and
-generation additionally need `torch`/`transformers` and run on Colab or Kaggle, never locally.
+The published essay detector is [itsaakif/StopTheCap-E2C1-distilbert](https://huggingface.co/itsaakif/StopTheCap-E2C1-distilbert).
+Generator attribution is `ml/train/train_attribution.py` with `notebooks/colab_e2c1_attribution.ipynb`.
 
 ## Dataset roles
 
@@ -117,14 +142,28 @@ digests and evaluation results are. HC3 and RAID can never enter a training path
 
 ```
 ml/            ingestion, dedup, splits, audit
-ml/e2c1/       prompt inventory, families, prompt-level split, generation contract
+ml/e2c1/       prompt inventory, families, prompt-level split, generation, corpus builders
+ml/train/      trainers, calibration, export
 datasets/      manifests (committed) + raw/canonical/splits (gitignored, not distributed)
-tests/         512 tests, including negative tests for every gate
+tests/         520 tests, including negative tests for every gate
 docs/          results, method, licence audit, provenance
 reports/       generated audit output and E1 metrics
-notebooks/     Colab training and smoke-generation notebooks
+notebooks/     Colab generation, training and attribution notebooks
 scripts/       private ZIP builder for Colab
 .github/       CI: tests on 3.12/3.13 + guards against committed data/secrets/weights
+```
+
+## Citation
+
+If you use this artefact, cite the negative result:
+
+```bibtex
+@misc{stopthecap2026e2c1,
+  title  = {StopTheCap E2-C1: length-matched API-generated essays do not transfer to HC3 or RAID},
+  author = {ItsAakif},
+  year   = {2026},
+  note   = {Negative result; model at huggingface.co/itsaakif/StopTheCap-E2C1-distilbert}
+}
 ```
 
 ## Licence
