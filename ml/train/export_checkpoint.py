@@ -111,6 +111,23 @@ predicted_class = logits.argmax(dim=-1).item()  # 0 = human, 1 = machine
 - The model does not generalise to HC3 or RAID; see the results table.
 - The frozen threshold is extremely low because machine scores are near 1.0 and
   human scores are near 0.0 in-domain.
+
+## Reproduce
+
+The canonical corpus is not distributed; the builder regenerates it from the prompt manifest, the Ghostbuster records and the API generation shards.
+
+    python -m ml.e2c1.build_essay_corpus
+    python -m ml.train.train_e2c1 --corpus datasets/canonical/e2c1_essays.jsonl --manifest datasets/manifests/e2_c1_essays.json --device cuda --out reports/E2C1_essays
+    python -m ml.train.export_checkpoint --checkpoint reports/E2C1_essays/checkpoints/last.pt --out reports/E2C1_essays/export
+
+Training: distilbert-base-cased, 512 tokens, 3 epochs, lr 5e-5, batch 16 x grad-accum 2, fp16.
+
+## Citation
+
+If you use this artefact, cite it as a negative result:
+
+> StopTheCap (2026). E2-C1: length-matched API-generated essays do not transfer to HC3 or RAID.
+> Hugging Face model itsaakif/StopTheCap-E2C1-distilbert.
 """
 
 

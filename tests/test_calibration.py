@@ -49,6 +49,7 @@ def test_wilson_bounds():
 
 
 def test_temperature_is_positive():
+    pytest.importorskip("torch")
     rng = np.random.default_rng(0)
     y = np.r_[np.zeros(200), np.ones(200)]
     p = np.r_[rng.beta(2, 8, 200), rng.beta(8, 2, 200)]
@@ -72,6 +73,7 @@ def test_temperature_of_one_is_identity():
 
 
 def test_temperature_reduces_ece_on_overconfident_data():
+    pytest.importorskip("torch")
     rng = np.random.default_rng(2)
     y = np.r_[np.zeros(400), np.ones(400)]
     # deliberately overconfident scores
