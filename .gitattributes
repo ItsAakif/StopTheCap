@@ -1,4 +1,4 @@
-﻿# Normalise text files to LF; keep data files byte-exact across platforms.
+# Normalise text files to LF; keep data files byte-exact across platforms.
 * text=auto eol=lf
 
 # Data artefacts are hashed byte-for-byte; never rewrite their line endings.

@@ -50,7 +50,7 @@ Two self-generated corpora were tested against E1's frozen baseline.
 | Corpus | In-domain | HC3 | RAID | Human FPR (HC3 / RAID) |
 |---|---:|---:|---:|---|
 | E1 - Ghostbuster | 0.999 | 0.817 | 0.532 | - |
-| E2-C1 short encyclopedic (17,708) | 1.000 | 0.367 | 0.375 | 42% / 44% |
+| E2-C1 short encyclopedic (23,774) | 1.000 | 0.367 | 0.375 | 42% / 44% |
 | E2-C1 length-matched essays (2,178) | 1.000 | 0.447 | 0.377 | 88% / 88% |
 
 **What succeeded:** the generation, provenance, split, merge and evaluation pipeline; and a
@@ -72,7 +72,7 @@ python -m ml.cli audit     # 12 gates -> reports/audit.{md,json}
 python -m pytest -q        # 520 tests
 ```
 
-Requirements: Python 3.12+ with `numpy`, `pydantic`, `PyYAML`, `scikit-learn` and `pytest`.
+Requirements: Python 3.12+ with `numpy`, `pydantic`, `PyYAML`, `scikit-learn`, `pytest` and `Pillow`; video decoding additionally needs `ffmpeg` on `PATH`.
 Training, generation and export additionally need `torch`/`transformers` and run on Colab or Kaggle, never locally.
 
 ## Reproduce E2-C1

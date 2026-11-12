@@ -48,6 +48,8 @@ EXPECTED_PARTITIONS = {"train": 9344, "val": 1135, "test_holdout": 1408}
 
 @pytest.fixture(scope="module")
 def corpus() -> list[dict]:
+    if not CORPUS.is_file():
+        pytest.skip(f"corpus absent (gitignored, not distributed): {CORPUS}")
     return load_corpus(CORPUS)
 
 

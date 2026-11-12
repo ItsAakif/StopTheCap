@@ -55,6 +55,8 @@ CORPUS_SHA256 = "767853403bb77d72bbfa8a2a3e5dfd424ddfa5ebe9626e4cea3a6b1ccba3667
 
 @pytest.fixture(scope="module")
 def corpus() -> list[dict]:
+    if not CORPUS.is_file():
+        pytest.skip(f"corpus absent (gitignored, not distributed): {CORPUS}")
     return load_corpus(CORPUS)
 
 

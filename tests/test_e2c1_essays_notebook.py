@@ -22,6 +22,11 @@ LEGACY_MANIFEST = REPO / "datasets" / "manifests" / "e2_c1_training.json"
 CORPUS_SHA256 = "8b0c0cc3beebe024302c0e87b75995a71378b30ffa3c7605b5a11f8e6a75bf2c"
 DRIVE_OUT = "/content/drive/MyDrive/StopTheCap_reports/E2C1_essays"
 
+requires_corpus = pytest.mark.skipif(
+    not CORPUS.is_file(),
+    reason="essays corpus absent (gitignored, not distributed)",
+)
+
 
 @pytest.fixture(scope="module")
 def notebook() -> dict:
@@ -109,6 +114,7 @@ def test_default_manifest_is_derived_for_each_corpus():
     ) == LEGACY_MANIFEST
 
 
+@requires_corpus
 def test_explicit_manifest_validates_the_pinned_sha():
     manifest, digest = trainer.load_and_verify_manifest(
         CORPUS, MANIFEST, required=True
@@ -118,6 +124,7 @@ def test_explicit_manifest_validates_the_pinned_sha():
     assert manifest["corpus_sha256"] == CORPUS_SHA256
 
 
+@requires_corpus
 def test_manifest_sha_mismatch_is_rejected(tmp_path):
     bad = tmp_path / "bad_manifest.json"
     bad.write_text(json.dumps({"corpus_sha256": "0" * 64}), encoding="utf-8")
