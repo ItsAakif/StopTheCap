@@ -65,7 +65,7 @@ usable detector.
 ## Quick start
 
 ```bash
-python -m pip install "numpy>=2.0" "pydantic>=2.7" "PyYAML>=6.0" "scikit-learn>=1.4" "pytest>=8.0"
+python -m pip install "numpy>=2.0" "pydantic>=2.7" "PyYAML>=6.0" "scikit-learn>=1.4" "Pillow>=10" "pytest>=8.0"
 
 python -m ml.cli build     # records -> splits -> datasets/manifests/COMBINED.yaml
 python -m ml.cli audit     # 12 gates -> reports/audit.{md,json}
