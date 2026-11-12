@@ -6,6 +6,8 @@ needs only code plus a few manifests, so the archive stays small and contains no
 Usage:
     python scripts/make_colab_zip.py --out StopTheCap.zip
     python scripts/make_colab_zip.py --out StopTheCap.zip --with-e2c1
+    python scripts/make_colab_zip.py --out StopTheCap.zip --with-e2c1-training
+    python scripts/make_colab_zip.py --out StopTheCap.zip --with-data
 """
 
 from __future__ import annotations
@@ -41,6 +43,27 @@ E2C1_FILES = (
     "ml/e2c1/generation_config.json",
 )
 
+# Training inputs. The corpus itself lives under datasets/canonical, so it is
+# allowlisted explicitly and only when --with-e2c1-training is requested.
+E2C1_TRAINING_FILES = (
+    "datasets/canonical/e2c1.jsonl",
+    "datasets/manifests/e2_c1_training.json",
+    "datasets/manifests/e2_c1_corpus.json",
+)
+
+# Essay-matched E2-C1 training inputs. Allowlisted by the same
+# ``--with-e2c1-training`` flag; they live beside the legacy corpus and are
+# required only by the essay-matched notebook.
+E2C1_ESSAYS_FILES = (
+    "datasets/canonical/e2c1_essays.jsonl",
+    "datasets/manifests/e2_c1_essays.json",
+)
+
+# The full allowlist included by --with-e2c1-training.  The legacy trio stays
+# required for backwards compatibility; the essay-matched pair is included when
+# present in the repository.
+E2C1_TRAINING_ALLOWLIST = E2C1_TRAINING_FILES + E2C1_ESSAYS_FILES
+
 EXCLUDE_SUFFIXES = {".pt", ".ckpt", ".onnx", ".safetensors", ".pyc", ".zip", ".mp4", ".rar", ".7z"}
 # Restricted or bulky evidence data, re-downloadable via the scripts beside them.
 EXCLUDE_NAME_PATTERNS = ("_evidence/*.csv", "_evidence/*.jsonl")
@@ -54,9 +77,16 @@ def _rel(p: Path, root: Path = REPO) -> str:
     return p.relative_to(root).as_posix()
 
 
-def should_skip(path: Path, include_data: bool = False, root: Path = REPO) -> bool:
+def should_skip(
+    path: Path,
+    include_data: bool = False,
+    root: Path = REPO,
+    include_e2c1_training: bool = False,
+) -> bool:
     rel = _rel(path, root)
     if include_data and rel in DATA_FILES:
+        return False
+    if include_e2c1_training and rel in E2C1_TRAINING_ALLOWLIST:
         return False
     # Keep the explicit E2-C1 allowlist ahead of EXCLUDE_DIRS so a future change to the
     # dataset exclusions can never silently drop a required generation input.
@@ -73,11 +103,20 @@ def should_skip(path: Path, include_data: bool = False, root: Path = REPO) -> bo
     return path.name in {".env"} or path.name.endswith(".local")
 
 
-def iter_files(root: Path = REPO, include_data: bool = False) -> Iterable[Path]:
+def iter_files(
+    root: Path = REPO,
+    include_data: bool = False,
+    include_e2c1_training: bool = False,
+) -> Iterable[Path]:
     """Yield the files that belong in the archive, in the same order as before."""
     root = Path(root)
     for p in sorted(root.rglob("*")):
-        if p.is_dir() or should_skip(p, include_data, root=root):
+        if p.is_dir() or should_skip(
+            p,
+            include_data,
+            root=root,
+            include_e2c1_training=include_e2c1_training,
+        ):
             continue
         yield p
 
@@ -87,12 +126,14 @@ def build_zip(
     root: Path = REPO,
     with_data: bool = False,
     with_e2c1: bool = False,
+    with_e2c1_training: bool = False,
 ) -> tuple[Path, int, int]:
     """Write the archive and return ``(out, file_count, byte_size)``.
 
     ``with_e2c1`` is accepted for symmetry with the CLI; the allowlist in
     :func:`should_skip` always includes :data:`E2C1_FILES`, and the CLI performs the
-    existence and membership verification.
+    existence and membership verification.  ``with_e2c1_training`` additionally
+    allowlists :data:`E2C1_TRAINING_FILES` and :data:`E2C1_ESSAYS_FILES`.
     """
     del with_e2c1  # inclusion is unconditional; the flag only gates CLI validation
     out = Path(out)
@@ -100,7 +141,11 @@ def build_zip(
     out.parent.mkdir(parents=True, exist_ok=True)
     files = 0
     with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED, compresslevel=6) as zf:
-        for p in iter_files(root, include_data=with_data):
+        for p in iter_files(
+            root,
+            include_data=with_data,
+            include_e2c1_training=with_e2c1_training,
+        ):
             zf.write(p, f"StopTheCap/{_rel(p, root)}")
             files += 1
     return out, files, out.stat().st_size
@@ -112,22 +157,33 @@ def missing_e2c1_files(root: Path = REPO) -> list[str]:
     return [rel for rel in E2C1_FILES if not (root / rel).is_file()]
 
 
+def missing_e2c1_training_files(root: Path = REPO) -> list[str]:
+    """Return the absent E2-C1 training inputs under ``root``."""
+    root = Path(root)
+    return [rel for rel in E2C1_TRAINING_FILES if not (root / rel).is_file()]
+
+
 def verify_zip_members(
     names: Iterable[str],
     required: Iterable[str] = E2C1_FILES,
+    allow_canonical: Iterable[str] = (),
 ) -> list[str]:
     """Return membership problems; an empty list means the archive is acceptable.
 
     ``names`` are the archive's full member names (``StopTheCap/...``). ``required``
-    are repo-relative paths that must be present.
+    are repo-relative paths that must be present. ``allow_canonical`` are the only
+    repo-relative ``datasets/canonical`` paths that may appear in the archive.
     """
     names = [str(name) for name in names]
+    allowed = {f"StopTheCap/{rel}" for rel in allow_canonical}
     problems: list[str] = []
     for rel in required:
         member = f"StopTheCap/{rel}"
         if member not in names:
             problems.append(f"missing required member: {member}")
     for name in names:
+        if name in allowed:
+            continue
         for prefix in FORBIDDEN_PREFIXES:
             if name.startswith(prefix):
                 problems.append(f"forbidden path in zip: {name}")
@@ -137,10 +193,16 @@ def verify_zip_members(
     return problems
 
 
-def verify_zip(out: Path, required: Iterable[str] = E2C1_FILES) -> list[str]:
+def verify_zip(
+    out: Path,
+    required: Iterable[str] = E2C1_FILES,
+    allow_canonical: Iterable[str] = (),
+) -> list[str]:
     """Verify an existing archive against :func:`verify_zip_members`."""
     with zipfile.ZipFile(out) as zf:
-        return verify_zip_members(zf.namelist(), required)
+        return verify_zip_members(
+            zf.namelist(), required, allow_canonical=allow_canonical
+        )
 
 
 def main(argv=None, root: Path = REPO) -> int:
@@ -151,6 +213,8 @@ def main(argv=None, root: Path = REPO) -> int:
                     help="include datasets/canonical text records (needed for training/evaluation)")
     ap.add_argument("--with-e2c1", action="store_true",
                     help="require and verify the E2-C1 pre-generation artefacts")
+    ap.add_argument("--with-e2c1-training", action="store_true",
+                    help="include the E2-C1 training corpus and its manifests")
     args = ap.parse_args(argv)
 
     if args.with_e2c1:
@@ -161,15 +225,35 @@ def main(argv=None, root: Path = REPO) -> int:
                 print(f"  {rel}", file=sys.stderr)
             return 2
 
+    if args.with_e2c1_training:
+        missing = missing_e2c1_training_files(root)
+        if missing:
+            print("missing required E2-C1 training files:", file=sys.stderr)
+            for rel in missing:
+                print(f"  {rel}", file=sys.stderr)
+            return 2
+
     out, files, size = build_zip(
         Path(args.out),
         root=root,
         with_data=args.with_data,
         with_e2c1=args.with_e2c1,
+        with_e2c1_training=args.with_e2c1_training,
     )
 
-    if args.with_e2c1:
-        problems = verify_zip(out)
+    if args.with_e2c1 or args.with_e2c1_training:
+        required = tuple(E2C1_FILES) if args.with_e2c1 else ()
+        if args.with_e2c1_training:
+            required = required + tuple(E2C1_TRAINING_FILES)
+        allowed = ()
+        if args.with_data:
+            allowed = tuple(DATA_FILES)
+        if args.with_e2c1_training:
+            allowed = allowed + tuple(
+                rel for rel in E2C1_TRAINING_ALLOWLIST
+                if rel.startswith("datasets/canonical/")
+            )
+        problems = verify_zip(out, required=required, allow_canonical=allowed)
         if problems:
             print("ZIP verification failed:", file=sys.stderr)
             for problem in problems:
@@ -182,6 +266,8 @@ def main(argv=None, root: Path = REPO) -> int:
           " Includes canonical TEXT records for Colab training."))
     if args.with_e2c1:
         print("E2-C1 artefacts verified: 5 required members present, no forbidden paths.")
+    if args.with_e2c1_training:
+        print("E2-C1 training inputs verified: corpora + manifests present.")
     return 0
 
 

@@ -1,0 +1,52 @@
+# E2-C1 encoder fine-tune configuration.
+#
+# Same architecture and schedule as E1 (ml/train/encoder_config.yaml) so the two
+# experiments differ in corpus, not in optimisation. The corpus is the 1:1
+# E2-C1 option-C build (datasets/canonical/e2c1.jsonl); its SHA-256 is pinned by
+# datasets/manifests/e2_c1_training.json.
+
+experiment: E2C1
+model_name: distilbert-base-cased
+max_length: 512
+epochs: 3
+learning_rate: 5.0e-5
+batch_size: 16
+grad_accum: 2                            # effective batch 32
+weight_decay: 0.01
+warmup_ratio: 0.06
+fp16: true
+seed: 42
+
+# The corpus is exactly 1:1 per partition. Class-weighted loss is kept so the
+# same code path works if a future rebuild is imbalanced; every row is used once
+# and no human text is duplicated.
+imbalance:
+  strategy: class_weighted_loss
+  compute_from_split: true
+
+# Threshold is chosen on val only, at a human false-positive budget, and frozen
+# before val/test_holdout/hc3/raid are scored. Never tuned on any test split.
+threshold:
+  selection_split: val
+  target_human_fpr: 0.05
+
+# Checkpointing is mandatory: Colab terminates runtimes without warning.
+# last.pt is written under <out>/checkpoints every 200 optimizer steps.
+checkpoint:
+  dir: checkpoints/E2C1
+  every_steps: 200
+  keep_last: 2
+  resume: true
+
+# Paths are resolved relative to --out (default reports/E2C1).
+output:
+  run_log: E2C1.json
+  eval_json: E2C1_eval.json
+  eval_md: E2C1_eval.md
+  predictions: E2C1_predictions.jsonl
+
+evaluation:
+  in_domain: [val, test_holdout]
+  independent: [hc3, raid]
+  report: [roc_auc, pr_auc, human_fpr_with_ci, precision, recall, brier,
+           ece_15_bins, per_generator, per_topic]

@@ -61,3 +61,7 @@ out.txt
 # tooling caches
 .mypy_cache/
 .ruff_cache/
+
+# experiment outputs and checkpoints (never commit)
+StopTheCap_reports/
+E2C1_attribution/

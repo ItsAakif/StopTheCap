@@ -1,0 +1,110 @@
+{
+  "ai_capped": true,
+  "ai_requested": {
+    "test_holdout": 1717,
+    "train": 14192,
+    "val": 1799
+  },
+  "ai_source": {
+    "path": "datasets\\raw\\e2c1_generated\\merged.jsonl",
+    "sha256": "585974a298c372145ecef631c2679e459f94831d51dd61e66b1e8f0078f769f8"
+  },
+  "ai_used": {
+    "test_holdout": 1408,
+    "train": 9344,
+    "val": 1135
+  },
+  "cap_note": "AI capped to Ghostbuster chunk capacity",
+  "corpus": "e2c1",
+  "corpus_sha256": "767853403bb77d72bbfa8a2a3e5dfd424ddfa5ebe9626e4cea3a6b1ccba36675",
+  "counts": {
+    "by_generator": {
+      "deepseek_v41_flash": 5248,
+      "longcat_25": 508,
+      "muse_spark_1_3": 6131
+    },
+    "by_label": {
+      "0": 11887,
+      "1": 11887
+    },
+    "by_partition": {
+      "test_holdout": 2816,
+      "train": 18688,
+      "val": 2270
+    },
+    "by_partition_label": {
+      "test_holdout": {
+        "0": 1408,
+        "1": 1408
+      },
+      "train": {
+        "0": 9344,
+        "1": 9344
+      },
+      "val": {
+        "0": 1135,
+        "1": 1135
+      }
+    },
+    "by_topic": {
+      "arts_culture": 2396,
+      "business_economics": 806,
+      "geography_places": 150,
+      "history": 320,
+      "medicine_health": 48,
+      "other": 17159,
+      "religion_philosophy": 26,
+      "society_politics": 1143,
+      "sports": 1421,
+      "stem": 305
+    },
+    "total": 23774
+  },
+  "created_at": "2026-11-11",
+  "human_chunking": {
+    "chunks_per_essay": {
+      "0": 27,
+      "1": 251,
+      "10": 36,
+      "11": 27,
+      "12": 25,
+      "13": 12,
+      "14": 10,
+      "15": 6,
+      "16": 3,
+      "17": 4,
+      "18": 4,
+      "19": 1,
+      "2": 667,
+      "20": 3,
+      "21": 2,
+      "22": 2,
+      "3": 646,
+      "31": 1,
+      "35": 1,
+      "37": 1,
+      "4": 735,
+      "44": 1,
+      "5": 263,
+      "51": 1,
+      "6": 153,
+      "7": 78,
+      "8": 59,
+      "9": 31
+    },
+    "max_words": 150,
+    "min_words": 80
+  },
+  "human_source": {
+    "path": "datasets\\canonical\\ghostbuster.jsonl",
+    "sha256": "54d89a67d1e9d5a6fe21117941eb54563cdcb23cac42c5f595d205f408abaf0f"
+  },
+  "human_used": {
+    "test_holdout": 1408,
+    "train": 9344,
+    "val": 1135
+  },
+  "notes": "Option C: Ghostbuster label-0 essays are sentence-aligned into 80-150 word chunks (trailing <80 dropped) and sampled group-atomically per partition. By default the AI side is capped to the available human chunk count (deterministic, stratified by generator) so both labels match 1:1 per partition. Human rows have generator=null and topic_category='other'. AI group_id is the source prompt_id.",
+  "salt": "e2c1-train-v1",
+  "schema_version": "1.0"
+}

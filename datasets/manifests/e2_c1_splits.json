@@ -5009,196 +5009,286 @@
     },
     "by_partition_generator_decoding": {
       "test_holdout": {
-        "mistral_7b_instruct_v02": {
-          "greedy": 492,
-          "sampling": 492
+        "deepseek_v41_flash": {
+          "greedy": 369,
+          "sampling": 370
         },
-        "qwen3_5_4b": {
-          "greedy": 492,
-          "sampling": 492
+        "longcat_25": {
+          "greedy": 39,
+          "sampling": 44
+        },
+        "muse_spark_1_3": {
+          "greedy": 448,
+          "sampling": 447
         }
       },
       "train": {
-        "mistral_7b_instruct_v02": {
-          "greedy": 4004,
-          "sampling": 4004
+        "deepseek_v41_flash": {
+          "greedy": 3111,
+          "sampling": 3123
         },
-        "qwen3_5_4b": {
-          "greedy": 4004,
-          "sampling": 4004
+        "longcat_25": {
+          "greedy": 282,
+          "sampling": 308
+        },
+        "muse_spark_1_3": {
+          "greedy": 3686,
+          "sampling": 3682
         }
       },
       "val": {
-        "mistral_7b_instruct_v02": {
-          "greedy": 504,
-          "sampling": 504
+        "deepseek_v41_flash": {
+          "greedy": 397,
+          "sampling": 398
         },
-        "qwen3_5_4b": {
-          "greedy": 504,
-          "sampling": 504
+        "longcat_25": {
+          "greedy": 40,
+          "sampling": 43
+        },
+        "muse_spark_1_3": {
+          "greedy": 461,
+          "sampling": 460
         }
       }
     },
     "by_partition_generator_decoding_topic": {
       "test_holdout": {
-        "mistral_7b_instruct_v02": {
+        "deepseek_v41_flash": {
           "greedy": {
-            "arts_culture": 101,
-            "business_economics": 32,
-            "geography_places": 6,
-            "history": 13,
+            "arts_culture": 75,
+            "business_economics": 20,
+            "geography_places": 5,
+            "history": 9,
             "medicine_health": 3,
-            "other": 223,
+            "other": 171,
             "religion_philosophy": 0,
-            "society_politics": 46,
-            "sports": 56,
-            "stem": 12
+            "society_politics": 38,
+            "sports": 42,
+            "stem": 6
           },
           "sampling": {
-            "arts_culture": 101,
-            "business_economics": 32,
-            "geography_places": 6,
-            "history": 13,
+            "arts_culture": 75,
+            "business_economics": 20,
+            "geography_places": 5,
+            "history": 9,
             "medicine_health": 3,
-            "other": 223,
+            "other": 171,
             "religion_philosophy": 0,
-            "society_politics": 46,
-            "sports": 56,
-            "stem": 12
+            "society_politics": 39,
+            "sports": 42,
+            "stem": 6
           }
         },
-        "qwen3_5_4b": {
+        "longcat_25": {
           "greedy": {
-            "arts_culture": 101,
-            "business_economics": 32,
-            "geography_places": 6,
-            "history": 13,
-            "medicine_health": 3,
-            "other": 223,
+            "arts_culture": 5,
+            "business_economics": 1,
+            "geography_places": 1,
+            "history": 1,
+            "medicine_health": 0,
+            "other": 18,
             "religion_philosophy": 0,
-            "society_politics": 46,
-            "sports": 56,
-            "stem": 12
+            "society_politics": 6,
+            "sports": 6,
+            "stem": 1
           },
           "sampling": {
-            "arts_culture": 101,
-            "business_economics": 32,
-            "geography_places": 6,
-            "history": 13,
-            "medicine_health": 3,
-            "other": 223,
+            "arts_culture": 7,
+            "business_economics": 1,
+            "geography_places": 1,
+            "history": 1,
+            "medicine_health": 0,
+            "other": 20,
             "religion_philosophy": 0,
-            "society_politics": 46,
-            "sports": 56,
-            "stem": 12
+            "society_politics": 6,
+            "sports": 7,
+            "stem": 1
+          }
+        },
+        "muse_spark_1_3": {
+          "greedy": {
+            "arts_culture": 94,
+            "business_economics": 31,
+            "geography_places": 5,
+            "history": 12,
+            "medicine_health": 3,
+            "other": 203,
+            "religion_philosophy": 0,
+            "society_politics": 40,
+            "sports": 49,
+            "stem": 11
+          },
+          "sampling": {
+            "arts_culture": 93,
+            "business_economics": 31,
+            "geography_places": 5,
+            "history": 12,
+            "medicine_health": 3,
+            "other": 203,
+            "religion_philosophy": 0,
+            "society_politics": 40,
+            "sports": 49,
+            "stem": 11
           }
         }
       },
       "train": {
-        "mistral_7b_instruct_v02": {
+        "deepseek_v41_flash": {
           "greedy": {
-            "arts_culture": 818,
-            "business_economics": 268,
-            "geography_places": 49,
-            "history": 112,
-            "medicine_health": 18,
-            "other": 1790,
-            "religion_philosophy": 10,
-            "society_politics": 378,
-            "sports": 462,
-            "stem": 99
+            "arts_culture": 650,
+            "business_economics": 205,
+            "geography_places": 41,
+            "history": 84,
+            "medicine_health": 15,
+            "other": 1378,
+            "religion_philosophy": 8,
+            "society_politics": 288,
+            "sports": 365,
+            "stem": 77
           },
           "sampling": {
-            "arts_culture": 818,
-            "business_economics": 268,
-            "geography_places": 49,
-            "history": 112,
-            "medicine_health": 18,
-            "other": 1790,
-            "religion_philosophy": 10,
-            "society_politics": 378,
-            "sports": 462,
-            "stem": 99
+            "arts_culture": 650,
+            "business_economics": 206,
+            "geography_places": 41,
+            "history": 85,
+            "medicine_health": 15,
+            "other": 1383,
+            "religion_philosophy": 8,
+            "society_politics": 293,
+            "sports": 365,
+            "stem": 77
           }
         },
-        "qwen3_5_4b": {
+        "longcat_25": {
           "greedy": {
-            "arts_culture": 818,
-            "business_economics": 268,
-            "geography_places": 49,
-            "history": 112,
-            "medicine_health": 18,
-            "other": 1790,
-            "religion_philosophy": 10,
-            "society_politics": 378,
-            "sports": 462,
-            "stem": 99
+            "arts_culture": 64,
+            "business_economics": 19,
+            "geography_places": 7,
+            "history": 8,
+            "medicine_health": 2,
+            "other": 133,
+            "religion_philosophy": 0,
+            "society_politics": 19,
+            "sports": 24,
+            "stem": 6
           },
           "sampling": {
-            "arts_culture": 818,
-            "business_economics": 268,
-            "geography_places": 49,
-            "history": 112,
-            "medicine_health": 18,
-            "other": 1790,
+            "arts_culture": 70,
+            "business_economics": 21,
+            "geography_places": 7,
+            "history": 8,
+            "medicine_health": 2,
+            "other": 147,
+            "religion_philosophy": 0,
+            "society_politics": 19,
+            "sports": 27,
+            "stem": 7
+          }
+        },
+        "muse_spark_1_3": {
+          "greedy": {
+            "arts_culture": 747,
+            "business_economics": 246,
+            "geography_places": 42,
+            "history": 104,
+            "medicine_health": 16,
+            "other": 1636,
             "religion_philosophy": 10,
-            "society_politics": 378,
-            "sports": 462,
-            "stem": 99
+            "society_politics": 358,
+            "sports": 435,
+            "stem": 92
+          },
+          "sampling": {
+            "arts_culture": 747,
+            "business_economics": 243,
+            "geography_places": 42,
+            "history": 104,
+            "medicine_health": 16,
+            "other": 1635,
+            "religion_philosophy": 10,
+            "society_politics": 358,
+            "sports": 435,
+            "stem": 92
           }
         }
       },
       "val": {
-        "mistral_7b_instruct_v02": {
+        "deepseek_v41_flash": {
           "greedy": {
-            "arts_culture": 103,
-            "business_economics": 35,
-            "geography_places": 6,
-            "history": 15,
+            "arts_culture": 79,
+            "business_economics": 26,
+            "geography_places": 4,
+            "history": 13,
             "medicine_health": 2,
-            "other": 224,
+            "other": 177,
             "religion_philosophy": 2,
-            "society_politics": 46,
-            "sports": 58,
-            "stem": 13
+            "society_politics": 36,
+            "sports": 46,
+            "stem": 12
           },
           "sampling": {
-            "arts_culture": 103,
-            "business_economics": 35,
-            "geography_places": 6,
-            "history": 15,
+            "arts_culture": 79,
+            "business_economics": 26,
+            "geography_places": 4,
+            "history": 13,
             "medicine_health": 2,
-            "other": 224,
+            "other": 178,
             "religion_philosophy": 2,
-            "society_politics": 46,
-            "sports": 58,
-            "stem": 13
+            "society_politics": 36,
+            "sports": 46,
+            "stem": 12
           }
         },
-        "qwen3_5_4b": {
+        "longcat_25": {
           "greedy": {
-            "arts_culture": 103,
-            "business_economics": 35,
-            "geography_places": 6,
-            "history": 15,
-            "medicine_health": 2,
-            "other": 224,
-            "religion_philosophy": 2,
-            "society_politics": 46,
-            "sports": 58,
-            "stem": 13
+            "arts_culture": 6,
+            "business_economics": 2,
+            "geography_places": 0,
+            "history": 2,
+            "medicine_health": 0,
+            "other": 20,
+            "religion_philosophy": 0,
+            "society_politics": 4,
+            "sports": 5,
+            "stem": 1
           },
           "sampling": {
-            "arts_culture": 103,
-            "business_economics": 35,
+            "arts_culture": 6,
+            "business_economics": 2,
+            "geography_places": 0,
+            "history": 2,
+            "medicine_health": 0,
+            "other": 22,
+            "religion_philosophy": 0,
+            "society_politics": 5,
+            "sports": 5,
+            "stem": 1
+          }
+        },
+        "muse_spark_1_3": {
+          "greedy": {
+            "arts_culture": 97,
+            "business_economics": 33,
             "geography_places": 6,
-            "history": 15,
+            "history": 13,
             "medicine_health": 2,
-            "other": 224,
+            "other": 202,
             "religion_philosophy": 2,
-            "society_politics": 46,
-            "sports": 58,
-            "stem": 13
+            "society_politics": 41,
+            "sports": 53,
+            "stem": 12
+          },
+          "sampling": {
+            "arts_culture": 97,
+            "business_economics": 33,
+            "geography_places": 6,
+            "history": 13,
+            "medicine_health": 2,
+            "other": 201,
+            "religion_philosophy": 2,
+            "society_politics": 41,
+            "sports": 53,
+            "stem": 12
           }
         }
       }

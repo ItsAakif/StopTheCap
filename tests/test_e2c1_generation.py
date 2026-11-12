@@ -64,8 +64,40 @@ def config() -> GenerationConfig:
 
 
 @pytest.fixture(scope="module")
-def registry() -> dict:
-    return json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
+def registry(config: GenerationConfig) -> dict:
+    """Local registry equivalent for the torch-generation contract.
+
+    ``datasets/manifests/e2_c1_licences.json`` now records the three E2-C1 API
+    providers, so the local Mistral/Qwen generation config is validated against
+    this synthetic equivalent rather than the production registry.
+    """
+    models = []
+    for generator in config.generators:
+        models.append(
+            {
+                "generator_id": generator.generator_id,
+                "model_id": generator.model_id,
+                "revision": generator.model_revision,
+                "licence": {
+                    "spdx": "Apache-2.0",
+                    "name": "Apache License 2.0",
+                    "licence_file_present": True,
+                },
+                "output_terms": {"outputs_licensed": False},
+                "status": "approved_private_research",
+            }
+        )
+    return {
+        "models": models,
+        "withdrawn_models": [
+            {
+                "generator_id": "withdrawn_probe",
+                "licence": {"spdx": "MIT"},
+                "output_terms": {"outputs_licensed": True},
+                "status": "blocked",
+            }
+        ],
+    }
 
 
 def sha(text: str) -> str:
@@ -296,24 +328,33 @@ def test_licence_validation_outputs_licensed(config, registry):
         validate_config_against_licences(config, bad_registry)
 
 
-def test_licence_registry_has_exactly_the_two_approved_generators(registry):
+def test_api_licence_registry_has_exactly_the_three_generators():
+    registry = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
     generator_ids = {entry["generator_id"] for entry in registry["models"]}
-    assert generator_ids == {"mistral_7b_instruct_v02", "qwen3_5_4b"}
+    assert generator_ids == {
+        "deepseek_v41_flash",
+        "muse_spark_1_3",
+        "longcat_25",
+    }
     withdrawn_ids = {
         entry["generator_id"] for entry in registry.get("withdrawn_models", [])
     }
-    assert "llama_32_3b_instruct" in withdrawn_ids
-    assert "llama_32_3b_instruct" not in generator_ids
-    qwen = next(
-        entry for entry in registry["models"] if entry["generator_id"] == "qwen3_5_4b"
-    )
-    assert qwen["model_id"] == "Qwen/Qwen3.5-4B"
-    assert qwen["revision"] == "851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a"
-    assert qwen["licence"]["spdx"] == "Apache-2.0"
-    assert qwen["licence"]["licence_file_present"] is True
-    assert qwen["output_terms"]["outputs_licensed"] is False
-    assert qwen["status"] == "approved_private_research"
-    assert qwen["confidence"] == "high"
+    assert withdrawn_ids == {
+        "llama_32_3b_instruct",
+        "mistral_7b_instruct_v02",
+        "glm_53_flash",
+    }
+    assert generator_ids.isdisjoint(withdrawn_ids)
+    for entry in registry["models"]:
+        assert entry["licence"]["spdx"] == "NOASSERTION"
+        assert entry["licence"]["name"] == "Provider API terms"
+        assert entry["licence"]["licence_file_present"] is False
+        assert entry["output_terms"]["outputs_licensed"] is False
+        assert entry["status"] == "approved_private_research"
+        assert entry["confidence"] == "low"
+        note = entry["note"].lower()
+        assert "not independently audited" in note
+        assert "authorised" in note
 
 
 def test_licence_validation_ignores_withdrawn_models(config, registry):

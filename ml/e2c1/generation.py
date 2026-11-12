@@ -211,7 +211,9 @@ class GenerationRecord(BaseModel):
     prompt_template_id: str
     chat_template_sha256: str = Field(pattern=SHA256_RE)
     config_digest: str = Field(pattern=SHA256_RE)
-    finish_reason: Literal["eos", "length"]
+    # API-provider rows do not expose a reliable stop reason; the shard merge
+    # records ``"unknown"`` rather than inventing ``"eos"``/``"length"``.
+    finish_reason: Literal["eos", "length", "unknown"]
     quality_flags: list[str] = Field(default_factory=list)
 
 

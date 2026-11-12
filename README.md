@@ -13,9 +13,9 @@ legal advice.
 
 | Area | State |
 |---|---|
-| Dataset audit and leakage gates | 12 gates in `python -m ml.cli audit»; E1 split digest frozen |
+| Dataset audit and leakage gates | 12 gates in `python -m ml.cli audit`; E1 split digest frozen |
 | **E1 encoder (DistilBERT)** | **trained, evaluated, frozen** - [docs/E1-results.md](docs/E1-results.md), [reports/e1/E1_eval.json](reports/e1/E1_eval.json) |
-| **E2-C1 corpus** | prompt inventory, prompt-level split and licence audit complete; generation **not run** - [docs/e2/](docs/e2/) |
+| **E2-C1 experiment** | **completed, negative result** - in-domain 1.000, HC3 0.447, RAID 0.377; model at [itsaakif/StopTheCap-E2C1-distilbert](https://huggingface.co/itsaakif/StopTheCap-E2C1-distilbert) |
 | Video detection | pipeline validated on CPU; detector not selected - [docs/video-alternatives.md](docs/video-alternatives.md) |
 | Fact checker | not started |
 
@@ -23,14 +23,33 @@ legal advice.
 
 | Evaluation set | ROC-AUC | Note |
 |---|---:|---|
-| Ghostbuster `test_id» (in-domain) | 0.999 | in-domain separation is easy; not the honest headline |
-| `test_ood_domain» (news) | 0.980 | unseen domain, same corpus |
+| Ghostbuster `test_id` (in-domain) | 0.999 | in-domain separation is easy; not the honest headline |
+| `test_ood_domain` (news) | 0.980 | unseen domain, same corpus |
 | HC3 | 0.817 | independent |
 | RAID | **0.532** | 95% CI includes chance; human FPR 49.1% |
 
 The E1 result is the reason E2-C1 exists: a detector trained on Ghostbuster does not transfer to
 RAID's generator families. E1's checkpoint, configuration, threshold, split and evaluation
 artefacts are frozen and are not modified by later work.
+
+## E2-C1 experiment (negative result)
+
+Two self-generated corpora were tested against E1's frozen baseline.
+
+| Corpus | In-domain | HC3 | RAID | Human FPR (HC3 / RAID) |
+|---|---:|---:|---:|---|
+| E1 - Ghostbuster | 0.999 | 0.817 | 0.532 | - |
+| E2-C1 short encyclopedic (17,708) | 1.000 | 0.367 | 0.375 | 42% / 44% |
+| E2-C1 length-matched essays (2,178) | 1.000 | 0.447 | 0.377 | 88% / 88% |
+
+**What succeeded:** the generation, provenance, split, merge and evaluation pipeline; and a
+3-class generator-attribution model (95.1% accuracy, 0.84 macro-F1) that distinguishes
+DeepSeek V4.1 Flash, Muse Spark 1.3 and LongCat 2.5.
+
+**What failed:** cross-dataset generalisation. Both corpora produce perfect in-domain separation
+and at-or-below-chance ranking on HC3/RAID. The shortcut gate caught the cause: word count first,
+then paragraph and digit density. The essay detector is published as a research artefact, not a
+usable detector.
 
 ## What exists today
 
@@ -48,8 +67,8 @@ python -m ml.e2c1.build_splits             # prompt-level 80/10/10 split (offlin
 python -m ml.e2c1.generate --help          # generation runner; full run needs --authorise-full-run
 ```
 
-Requirements: Python 3.12+ with `numpy», `pydantic», `PyYAML», `scikit-learn», `pytest». Training and
-generation additionally need `torch»/`transformers» and run on Colab or Kaggle, never locally.
+Requirements: Python 3.12+ with `numpy`, `pydantic`, `PyYAML`, `scikit-learn`, `pytest`. Training and
+generation additionally need `torch`/`transformers` and run on Colab or Kaggle, never locally.
 
 ## Dataset roles
 
@@ -68,15 +87,15 @@ digests and evaluation results are. HC3 and RAID can never enter a training path
 
 ## Design rules that are enforced, not aspirational
 
-- **Original labels are never overwritten.** `original_label» is preserved alongside `label».
-- **Splits are group-based and deterministic.** `sha256(group_id + salt)», independent of row order;
+- **Original labels are never overwritten.** `original_label` is preserved alongside `label`.
+- **Splits are group-based and deterministic.** `sha256(group_id + salt)`, independent of row order;
   the digest is committed and re-verified.
 - **Evaluation data is quarantined by construction.** RAID and HC3 are evaluation-only.
-- **No licence, no training.** `tests/test_manifests.py» fails if a source lacks licence evidence.
+- **No licence, no training.** `tests/test_manifests.py` fails if a source lacks licence evidence.
 - **Absence of a licence is not permission.** M4/M4GT-Bench is excluded on that basis.
 - **The audit must be able to fail.** Negative tests assert it catches a one-character leak.
 - **E2-C1 splits are assigned per prompt, before generation.** No prompt or near-duplicate family
-  can cross partitions; no E2-C1 sample can reach E1's `test_id».
+  can cross partitions; no E2-C1 sample can reach E1's `test_id`.
 
 ## Known limitations
 
@@ -88,9 +107,10 @@ digests and evaluation results are. HC3 and RAID can never enter a training path
    the honest headline.
 4. **E1 RAID ROC-AUC 0.532 is chance.** No OOD safeguard is claimed; confidence-based abstention was
    tested and failed under domain shift.
-5. **No E2-C1 model has been trained and the 20,000-sample generation has not been run.** The
-   repository contains the pre-generation artefacts and a smoke-only Colab notebook.
-6. The E2-C1 prompt inventory is topically skewed (`other» 44.7%, `medicine_health» 0.5%); see
+5. **E2-C1 is a documented negative result.** Two corpora were generated and trained; both fail
+   cross-dataset transfer (HC3 0.367/0.447, RAID 0.375/0.377). The essay detector is published on
+   Hugging Face as a research artefact, not a usable detector.
+6. The E2-C1 prompt inventory is topically skewed (`other` 44.7%, `medicine_health` 0.5%); see
    [docs/e2/prompt-provenance.md](docs/e2/prompt-provenance.md).
 
 ## Repository layout
@@ -99,7 +119,7 @@ digests and evaluation results are. HC3 and RAID can never enter a training path
 ml/            ingestion, dedup, splits, audit
 ml/e2c1/       prompt inventory, families, prompt-level split, generation contract
 datasets/      manifests (committed) + raw/canonical/splits (gitignored, not distributed)
-tests/         398 tests, including negative tests for every gate
+tests/         512 tests, including negative tests for every gate
 docs/          results, method, licence audit, provenance
 reports/       generated audit output and E1 metrics
 notebooks/     Colab training and smoke-generation notebooks
@@ -118,9 +138,10 @@ The layering, and the reason generated text is **not** covered by the weight lic
 
 ## Next
 
-1. Run the E2-C1 Colab smoke test (`notebooks/colab_generate_e2c1.ipynb»); it stops after 16 attempts
-   and requests explicit authorisation.
-2. Only then generate the 20,000-sample corpus, decontaminate it against HC3/RAID/Ghostbuster, and
-   train E2-C1 with E1's exact configuration.
-3. Video: resolve whether a bounded real-video sample is obtainable under a permissive licence
+E2-C1 is closed as a negative result. The pipeline, corpora, attribution experiment and trained
+artefact are published for reproduction.
+
+1. Reuse the pipeline with human text from the target domains and multiple generator families;
+   that is the missing ingredient, not more training on the same composition.
+2. Video: resolve whether a bounded real-video sample is obtainable under a permissive licence
    before any model work.

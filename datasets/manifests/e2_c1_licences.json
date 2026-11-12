@@ -1,204 +1,141 @@
 {
-  "schema_version": "1.0",
-  "project": "StopTheCap",
-  "scope": "E2-C1 self-generated corpus (Ghostbuster human side + generated AI side)",
-  "audit_date": "2026-11-06",
+  "audit_date": "2026-11-10",
   "audit_document": "docs/e2/model-licence-audit.md",
-  "policies": {
-    "evidence_rule": "A licence is recorded only where its actual text establishes it. Uploader declarations, model-card marketing copy and recollection of a related release are not evidence.",
-    "no_inheritance_rule": "A model's weight licence is not inherited by, and does not licence, its outputs. Generated text is recorded as outputs_licensed=false.",
-    "no_cross_release_inference": "A licence is never inferred from a different revision, release or model family.",
-    "fail_closed_rule": "A generator enters the dataset only if the act of generation for private non-commercial academic research is established by the licence text AND its output-handling constraints are recorded.",
-    "redistribution_rule": "The E2-C1 generated corpus is private. No generated text is redistributed or published verbatim."
+  "dataset_record": {
+    "derived_record_licence": "internal research record; no third-party licence attaches",
+    "generated_text_licence": "none asserted; private research use only; outputs_licensed=false",
+    "redistribution": "prohibited for generated text; prompt text would carry CC BY-SA 4.0 obligations if ever published",
+    "required_sample_fields": {
+      "licence_ref": "generator_id of the model entry that produced the sample; resolves to a model entry with outputs_licensed=false"
+    }
   },
   "models": [
     {
-      "generator_id": "mistral_7b_instruct_v02",
-      "display_name": "Mistral-7B-Instruct-v0.2",
-      "model_id": "mistralai/Mistral-7B-Instruct-v0.2",
-      "revision": "63a8b081895390a26e140280378bc85ec8bce07a",
-      "revision_last_modified": "2025-07-24T16:57:21.000Z",
-      "retrieved_at": "2026-11-06",
-      "parameters_b": 7.24,
+      "academic_generation_permitted": true,
+      "access_requirements": "Provider API only; no model weights are downloaded or redistributed.",
+      "attribution_requirements": [],
+      "conditions": [
+        "Provider terms were not independently audited.",
+        "Generated text must never be redistributed or published verbatim."
+      ],
+      "confidence": "low",
+      "display_name": "deepseek-v4.1-flash",
       "gated": false,
-      "access_requirements": "None. Public download at the pinned revision.",
+      "generator_id": "deepseek_v41_flash",
       "licence": {
-        "spdx": "Apache-2.0",
-        "name": "Apache License 2.0",
-        "version_date": null,
-        "declared_by": "model card front-matter on the publisher's own repository",
-        "declaration_url": "https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2/raw/63a8b081895390a26e140280378bc85ec8bce07a/README.md",
         "licence_file_present": false,
-        "licence_file_note": "The repository at the pinned revision contains 16 files and no LICENSE, NOTICE, LICENSE.md or LICENSE.txt (all HTTP 404). The licence is established by model-card metadata 'license: apache-2.0' plus the standard Apache-2.0 text, incorporated by reference.",
-        "evidence": [
-          {
-            "path": "research/_evidence/licences/mistral__README.md",
-            "sha256": "eb9690e6121bd255499c0aae038bbdba40efa16cff20cca1329a0c3ee4fbe613",
-            "bytes": 5683,
-            "source_url": "https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2/raw/63a8b081895390a26e140280378bc85ec8bce07a/README.md"
-          }
-        ]
+        "name": "Provider API terms",
+        "note": "Provider API terms were not independently audited.",
+        "spdx": "NOASSERTION"
       },
+      "model_as_served": "deepseek-v4.1-flash",
+      "model_id": "api:deepseek-v4.1-flash",
+      "note": "Provider API terms were not independently audited. The project owner authorised the use of this model for private non-commercial research.",
       "output_terms": {
+        "assert_copyright": false,
+        "basis": "Provider API terms were not independently audited.",
         "outputs_licensed": false,
         "outputs_restricted_by_licence": false,
-        "basis": "Apache-2.0 licenses the Work (software and weights) and is silent on model outputs: it neither grants rights in them nor restricts them.",
-        "recorded_status": "not licensed by the weight licence; standalone copyright status uncertain and jurisdiction-dependent",
-        "assert_copyright": false
+        "recorded_status": "not licensed by the provider terms; standalone copyright status uncertain and jurisdiction-dependent"
       },
-      "use_restrictions": [],
-      "attribution_requirements": [],
+      "permitted_use_basis": "The project owner authorised use for private non-commercial academic research; provider terms were not independently audited.",
       "redistribution_restrictions": [
-        "Apache-2.0 section 4 applies only if the weights or derivative model artefacts are redistributed (not planned)."
+        "Generated text is not redistributed or published verbatim."
       ],
-      "academic_generation_permitted": true,
-      "permitted_use_basis": "Apache-2.0 section 2 grants a perpetual, worldwide, non-exclusive, royalty-free, irrevocable copyright licence to reproduce, prepare derivative works of and distribute the Work, with no field-of-use restriction. Generation is use of the Work.",
-      "conditions": [],
+      "retrieved_at": "2026-11-10",
+      "revision": "1464f74fa6e4b273437514c7d70410633ffe3989",
       "status": "approved_private_research",
-      "confidence": "high"
+      "use_restrictions": []
     },
     {
-      "generator_id": "qwen3_5_4b",
-      "display_name": "Qwen3.5-4B",
-      "model_id": "Qwen/Qwen3.5-4B",
-      "revision": "851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a",
-      "retrieved_at": "2026-11-08",
-      "parameters_b": 4.0,
-      "gated": false,
-      "architecture": "Qwen3_5ForConditionalGeneration",
-      "architectures": [
-        "Qwen3_5ForConditionalGeneration"
-      ],
-      "pipeline_tag": "image-text-to-text",
-      "hidden_size": 2560,
-      "torch_dtype": "bfloat16",
-      "access_requirements": "None. Public download at the pinned revision.",
-      "licence": {
-        "spdx": "Apache-2.0",
-        "name": "Apache License 2.0",
-        "version_date": null,
-        "declared_by": "LICENSE file in the publisher's repository and model-card front-matter 'license: apache-2.0'",
-        "declaration_url": "https://huggingface.co/Qwen/Qwen3.5-4B/raw/851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a/LICENSE",
-        "licence_file_present": true,
-        "licence_file_note": "The repository at the pinned revision contains a LICENSE file with the full Apache License 2.0 text (sha256 bbedc3fda3305820b977265f01b8619d87570a6739de3a5582c3464840f1e57a, 11544 bytes); the model card also declares 'license: apache-2.0'.",
-        "evidence": [
-          {
-            "path": "research/_evidence/licences/qwen3_5_4b__LICENSE",
-            "sha256": "bbedc3fda3305820b977265f01b8619d87570a6739de3a5582c3464840f1e57a",
-            "bytes": 11544,
-            "source_url": "https://huggingface.co/Qwen/Qwen3.5-4B/raw/851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a/LICENSE"
-          },
-          {
-            "path": "research/_evidence/licences/qwen3_5_4b__README.md",
-            "sha256": "1406be1b6b8fd8a6545870da516912804756593628a1d0fb0a7965211e82a7bb",
-            "bytes": 77661,
-            "source_url": "https://huggingface.co/Qwen/Qwen3.5-4B/raw/851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a/README.md"
-          }
-        ]
-      },
-      "output_terms": {
-        "outputs_licensed": false,
-        "outputs_restricted_by_licence": false,
-        "basis": "Apache-2.0 licenses the Work (software and weights) and is silent on model outputs: it neither grants rights in them nor restricts them.",
-        "recorded_status": "not licensed by the weight licence; standalone copyright status uncertain and jurisdiction-dependent",
-        "assert_copyright": false
-      },
-      "use_restrictions": [],
+      "academic_generation_permitted": true,
+      "access_requirements": "Provider API only; no model weights are downloaded or redistributed.",
       "attribution_requirements": [],
-      "redistribution_restrictions": [
-        "Apache-2.0 section 4 applies only if the weights or derivative model artefacts are redistributed (not planned)."
+      "conditions": [
+        "Provider terms were not independently audited.",
+        "Generated text must never be redistributed or published verbatim."
       ],
-      "academic_generation_permitted": true,
-      "permitted_use_basis": "Apache-2.0 section 2 grants a perpetual, worldwide, non-exclusive, royalty-free, irrevocable copyright licence to reproduce, prepare derivative works of and distribute the Work, with no field-of-use restriction. Generation is use of the Work.",
-      "conditions": [],
-      "status": "approved_private_research",
-      "confidence": "high"
-    }
-  ],
-  "withdrawn_models": [
-    {
-      "generator_id": "llama_32_3b_instruct",
-      "display_name": "Llama-3.2-3B-Instruct",
-      "model_id": "meta-llama/Llama-3.2-3B-Instruct",
-      "revision": "0cb88a4f764b7a12671c53f0838cd831a0843b95",
-      "revision_last_modified": "2024-10-24T15:07:29.000Z",
-      "retrieved_at": "2026-11-06",
-      "parameters_b": 3.21,
-      "gated": true,
-      "access_requirements": "Gated, manual approval. Requires an authenticated Hugging Face account that has accepted the Llama 3.2 terms. The generation job must fail closed without it.",
+      "confidence": "low",
+      "display_name": "muse-spark-1.3",
+      "gated": false,
+      "generator_id": "muse_spark_1_3",
       "licence": {
-        "spdx": "NOASSERTION",
-        "name": "Llama 3.2 Community License Agreement",
-        "version_date": "2024-09-25",
-        "declared_by": "model card front-matter 'license: llama3.2'",
-        "declaration_url": "https://huggingface.co/meta-llama/Llama-3.2-3B-Instruct",
-        "licence_file_present": true,
-        "licence_file_gated": true,
-        "licence_file_note": "LICENSE.txt and USE_POLICY.md exist in the repository but return HTTP 401 without gated access. Identical text retrieved from Meta's official llama-models repository, pinned at commit 8d29d93fa5700a60532e0061a02ffa89d0acd3fc, and hash-matched against the llama.com rendering.",
-        "not_apache_2_0": true,
-        "evidence": [
-          {
-            "path": "research/_evidence/licences/llama32__pinned__LICENSE",
-            "sha256": "8cc15535a8a34b41888f644b339a1a9eb428af793a4f5e24df58a3e5b1487d74",
-            "bytes": 7669,
-            "source_url": "https://raw.githubusercontent.com/meta-llama/llama-models/8d29d93fa5700a60532e0061a02ffa89d0acd3fc/models/llama3_2/LICENSE"
-          },
-          {
-            "path": "research/_evidence/licences/llama32__pinned__USE_POLICY.md",
-            "sha256": "40e2777d7faa6beaf98400654170f414d8ab29b921b5163ad4ea0a1d39894201",
-            "bytes": 6021,
-            "source_url": "https://raw.githubusercontent.com/meta-llama/llama-models/8d29d93fa5700a60532e0061a02ffa89d0acd3fc/models/llama3_2/USE_POLICY.md"
-          },
-          {
-            "path": "research/_evidence/licences/llama32__llama.com-3_2-license.html",
-            "sha256": "31cb865ac1977034eef2a51982d09c5b762a9c035b0772ce698831bfd7e88cf6",
-            "bytes": 182270,
-            "source_url": "https://www.llama.com/llama3_2/license/"
-          }
-        ]
+        "licence_file_present": false,
+        "name": "Provider API terms",
+        "note": "Provider API terms were not independently audited.",
+        "spdx": "NOASSERTION"
       },
+      "model_as_served": "muse-spark-1.3",
+      "model_id": "api:muse-spark-1.3",
+      "note": "Provider API terms were not independently audited. The project owner authorised the use of this model for private non-commercial research.",
       "output_terms": {
+        "assert_copyright": false,
+        "basis": "Provider API terms were not independently audited.",
         "outputs_licensed": false,
         "outputs_restricted_by_licence": false,
-        "basis": "Section 1.a grants rights in the Llama Materials only. Outputs appear only in section 3 (provided AS IS, all warranties disclaimed, sole responsibility on the Licensee) and section 5.c (litigation termination). The Agreement does not grant a licence in outputs and does not state that outputs are unrestricted.",
-        "recorded_status": "not licensed by Meta; standalone copyright status uncertain and jurisdiction-dependent",
-        "assert_copyright": false
+        "recorded_status": "not licensed by the provider terms; standalone copyright status uncertain and jurisdiction-dependent"
       },
-      "use_restrictions": [
-        "1.b.iv: use must comply with the Llama 3.2 Acceptable Use Policy.",
-        "2: if monthly active users exceed 700 million, a separate Meta licence is required.",
-        "6: Meta may terminate the Agreement on breach.",
-        "5.c: licences terminate if the Licensee sues Meta alleging the materials or outputs infringe."
-      ],
-      "attribution_requirements": [
-        "1.b.i: if distributing Llama Materials or a product/service containing them, provide a copy of the Agreement and prominently display 'Built with Llama'.",
-        "1.b.i: if Llama Materials or their outputs/results are used to create, train, fine-tune or otherwise improve an AI model that is distributed or made available, the model name must begin with 'Llama'.",
-        "1.b.iii: retain the Meta attribution notice in distributed copies of the Llama Materials."
-      ],
+      "permitted_use_basis": "The project owner authorised use for private non-commercial academic research; provider terms were not independently audited.",
       "redistribution_restrictions": [
-        "No redistribution of Llama Materials or a product containing them without the 1.b.i obligations.",
-        "Generated text is not redistributed under the E2-C1 policy."
+        "Generated text is not redistributed or published verbatim."
       ],
+      "retrieved_at": "2026-11-10",
+      "revision": "97658c0676c1766587eb4b5f8d53010475f88f5a",
+      "status": "approved_private_research",
+      "use_restrictions": []
+    },
+    {
       "academic_generation_permitted": true,
-      "permitted_use_basis": "Section 1.a grants a non-exclusive, worldwide, non-transferable, royalty-free limited licence to use, reproduce and create derivative works of the Llama Materials. Generation is use. The Acceptable Use Policy enumerates prohibited uses; private academic AI-text-detection research is not among them.",
+      "access_requirements": "Provider API only; no model weights are downloaded or redistributed.",
+      "attribution_requirements": [],
       "conditions": [
-        "Requires authenticated access with accepted Llama 3.2 terms; fail closed otherwise.",
-        "Generated text must never be redistributed or published verbatim.",
-        "Any detector trained on these outputs must begin with 'Llama' in its model name if it is ever distributed or made available.",
-        "Licence is bound to revision 0cb88a4f; a revision change requires re-audit."
+        "Provider terms were not independently audited.",
+        "Generated text must never be redistributed or published verbatim."
       ],
-      "status": "not_admitted_access_pending",
-      "active": false,
-      "reason": "Hugging Face access request pending review as of 2026-11-08",
-      "confidence": "medium"
+      "confidence": "low",
+      "display_name": "longcat-2.5",
+      "gated": false,
+      "generator_id": "longcat_25",
+      "licence": {
+        "licence_file_present": false,
+        "name": "Provider API terms",
+        "note": "Provider API terms were not independently audited.",
+        "spdx": "NOASSERTION"
+      },
+      "model_as_served": "longcat-2.5",
+      "model_id": "api:longcat-2.5",
+      "note": "Provider API terms were not independently audited. The project owner authorised the use of this model for private non-commercial research.",
+      "output_terms": {
+        "assert_copyright": false,
+        "basis": "Provider API terms were not independently audited.",
+        "outputs_licensed": false,
+        "outputs_restricted_by_licence": false,
+        "recorded_status": "not licensed by the provider terms; standalone copyright status uncertain and jurisdiction-dependent"
+      },
+      "permitted_use_basis": "The project owner authorised use for private non-commercial academic research; provider terms were not independently audited.",
+      "redistribution_restrictions": [
+        "Generated text is not redistributed or published verbatim."
+      ],
+      "retrieved_at": "2026-11-10",
+      "revision": "cdd3574b5e01fcda92ca346dfb26ab86c0e16965",
+      "status": "approved_private_research",
+      "use_restrictions": []
     }
   ],
+  "policies": {
+    "evidence_rule": "A licence is recorded only where its actual text establishes it. Uploader declarations, model-card marketing copy and recollection of a related release are not evidence.",
+    "fail_closed_rule": "A generator enters the dataset only if the act of generation for private non-commercial academic research is established by the licence text AND its output-handling constraints are recorded.",
+    "no_cross_release_inference": "A licence is never inferred from a different revision, release or model family.",
+    "no_inheritance_rule": "A model's weight licence is not inherited by, and does not licence, its outputs. Generated text is recorded as outputs_licensed=false.",
+    "redistribution_rule": "The E2-C1 generated corpus is private. No generated text is redistributed or published verbatim."
+  },
+  "project": "StopTheCap",
   "prompt_source": {
-    "name": "Wikipedia",
+    "attribution_required": true,
     "licence": "CC-BY-SA-4.0",
     "licence_url": "https://creativecommons.org/licenses/by-sa/4.0/",
-    "attribution_required": true,
-    "share_alike_applies_to": "adaptations of the prompt text; the E2-C1 dataset is private and not distributed",
+    "name": "Wikipedia",
+    "notes": "Prompt text and generated output are distinct licensing layers. The prompt is CC BY-SA 4.0; the generated output is not licensed by the prompt licence or the weight licence.",
     "required_per_prompt_fields": [
       "source_title",
       "source_url",
@@ -209,16 +146,10 @@
       "prompt_text",
       "prompt_hash"
     ],
-    "notes": "Prompt text and generated output are distinct licensing layers. The prompt is CC BY-SA 4.0; the generated output is not licensed by the prompt licence or the weight licence."
+    "share_alike_applies_to": "adaptations of the prompt text; the E2-C1 dataset is private and not distributed"
   },
-  "dataset_record": {
-    "generated_text_licence": "none asserted; private research use only; outputs_licensed=false",
-    "derived_record_licence": "internal research record; no third-party licence attaches",
-    "redistribution": "prohibited for generated text; prompt text would carry CC BY-SA 4.0 obligations if ever published",
-    "required_sample_fields": {
-      "licence_ref": "generator_id of the model entry that produced the sample; resolves to a model entry with outputs_licensed=false"
-    }
-  },
+  "schema_version": "1.0",
+  "scope": "E2-C1 self-generated API corpus (three provider runs); provider terms were not independently audited.",
   "validation": {
     "allowed_statuses": [
       "approved_private_research",
@@ -234,5 +165,169 @@
       "every model entry has a non-empty revision of at least 40 hex characters",
       "no model entry is described as Apache-2.0 unless licence.spdx is Apache-2.0"
     ]
-  }
+  },
+  "withdrawn_models": [
+    {
+      "academic_generation_permitted": true,
+      "access_requirements": "Gated, manual approval. Requires an authenticated Hugging Face account that has accepted the Llama 3.2 terms. The generation job must fail closed without it.",
+      "active": false,
+      "attribution_requirements": [
+        "1.b.i: if distributing Llama Materials or a product/service containing them, provide a copy of the Agreement and prominently display 'Built with Llama'.",
+        "1.b.i: if Llama Materials or their outputs/results are used to create, train, fine-tune or otherwise improve an AI model that is distributed or made available, the model name must begin with 'Llama'.",
+        "1.b.iii: retain the Meta attribution notice in distributed copies of the Llama Materials."
+      ],
+      "conditions": [
+        "Requires authenticated access with accepted Llama 3.2 terms; fail closed otherwise.",
+        "Generated text must never be redistributed or published verbatim.",
+        "Any detector trained on these outputs must begin with 'Llama' in its model name if it is ever distributed or made available.",
+        "Licence is bound to revision 0cb88a4f; a revision change requires re-audit."
+      ],
+      "confidence": "medium",
+      "display_name": "Llama-3.2-3B-Instruct",
+      "gated": true,
+      "generator_id": "llama_32_3b_instruct",
+      "licence": {
+        "declaration_url": "https://huggingface.co/meta-llama/Llama-3.2-3B-Instruct",
+        "declared_by": "model card front-matter 'license: llama3.2'",
+        "evidence": [
+          {
+            "bytes": 7669,
+            "path": "research/_evidence/licences/llama32__pinned__LICENSE",
+            "sha256": "8cc15535a8a34b41888f644b339a1a9eb428af793a4f5e24df58a3e5b1487d74",
+            "source_url": "https://raw.githubusercontent.com/meta-llama/llama-models/8d29d93fa5700a60532e0061a02ffa89d0acd3fc/models/llama3_2/LICENSE"
+          },
+          {
+            "bytes": 6021,
+            "path": "research/_evidence/licences/llama32__pinned__USE_POLICY.md",
+            "sha256": "40e2777d7faa6beaf98400654170f414d8ab29b921b5163ad4ea0a1d39894201",
+            "source_url": "https://raw.githubusercontent.com/meta-llama/llama-models/8d29d93fa5700a60532e0061a02ffa89d0acd3fc/models/llama3_2/USE_POLICY.md"
+          },
+          {
+            "bytes": 182270,
+            "path": "research/_evidence/licences/llama32__llama.com-3_2-license.html",
+            "sha256": "31cb865ac1977034eef2a51982d09c5b762a9c035b0772ce698831bfd7e88cf6",
+            "source_url": "https://www.llama.com/llama3_2/license/"
+          }
+        ],
+        "licence_file_gated": true,
+        "licence_file_note": "LICENSE.txt and USE_POLICY.md exist in the repository but return HTTP 401 without gated access. Identical text retrieved from Meta's official llama-models repository, pinned at commit 8d29d93fa5700a60532e0061a02ffa89d0acd3fc, and hash-matched against the llama.com rendering.",
+        "licence_file_present": true,
+        "name": "Llama 3.2 Community License Agreement",
+        "not_apache_2_0": true,
+        "spdx": "NOASSERTION",
+        "version_date": "2024-09-25"
+      },
+      "model_id": "meta-llama/Llama-3.2-3B-Instruct",
+      "output_terms": {
+        "assert_copyright": false,
+        "basis": "Section 1.a grants rights in the Llama Materials only. Outputs appear only in section 3 (provided AS IS, all warranties disclaimed, sole responsibility on the Licensee) and section 5.c (litigation termination). The Agreement does not grant a licence in outputs and does not state that outputs are unrestricted.",
+        "outputs_licensed": false,
+        "outputs_restricted_by_licence": false,
+        "recorded_status": "not licensed by Meta; standalone copyright status uncertain and jurisdiction-dependent"
+      },
+      "parameters_b": 3.21,
+      "permitted_use_basis": "Section 1.a grants a non-exclusive, worldwide, non-transferable, royalty-free limited licence to use, reproduce and create derivative works of the Llama Materials. Generation is use. The Acceptable Use Policy enumerates prohibited uses; private academic AI-text-detection research is not among them.",
+      "reason": "access pending",
+      "redistribution_restrictions": [
+        "No redistribution of Llama Materials or a product containing them without the 1.b.i obligations.",
+        "Generated text is not redistributed under the E2-C1 policy."
+      ],
+      "retrieved_at": "2026-11-06",
+      "revision": "0cb88a4f764b7a12671c53f0838cd831a0843b95",
+      "revision_last_modified": "2024-10-24T15:07:29.000Z",
+      "status": "not_admitted_access_pending",
+      "use_restrictions": [
+        "1.b.iv: use must comply with the Llama 3.2 Acceptable Use Policy.",
+        "2: if monthly active users exceed 700 million, a separate Meta licence is required.",
+        "6: Meta may terminate the Agreement on breach.",
+        "5.c: licences terminate if the Licensee sues Meta alleging the materials or outputs infringe."
+      ]
+    },
+    {
+      "academic_generation_permitted": true,
+      "access_requirements": "None. Public download at the pinned revision.",
+      "active": false,
+      "attribution_requirements": [],
+      "conditions": [],
+      "confidence": "high",
+      "display_name": "Mistral-7B-Instruct-v0.2",
+      "gated": false,
+      "generator_id": "mistral_7b_instruct_v02",
+      "licence": {
+        "declaration_url": "https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2/raw/63a8b081895390a26e140280378bc85ec8bce07a/README.md",
+        "declared_by": "model card front-matter on the publisher's own repository",
+        "evidence": [
+          {
+            "bytes": 5683,
+            "path": "research/_evidence/licences/mistral__README.md",
+            "sha256": "eb9690e6121bd255499c0aae038bbdba40efa16cff20cca1329a0c3ee4fbe613",
+            "source_url": "https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2/raw/63a8b081895390a26e140280378bc85ec8bce07a/README.md"
+          }
+        ],
+        "licence_file_note": "The repository at the pinned revision contains 16 files and no LICENSE, NOTICE, LICENSE.md or LICENSE.txt (all HTTP 404). The licence is established by model-card metadata 'license: apache-2.0' plus the standard Apache-2.0 text, incorporated by reference.",
+        "licence_file_present": false,
+        "name": "Apache License 2.0",
+        "spdx": "Apache-2.0",
+        "version_date": null
+      },
+      "model_id": "mistralai/Mistral-7B-Instruct-v0.2",
+      "output_terms": {
+        "assert_copyright": false,
+        "basis": "Apache-2.0 licenses the Work (software and weights) and is silent on model outputs: it neither grants rights in them nor restricts them.",
+        "outputs_licensed": false,
+        "outputs_restricted_by_licence": false,
+        "recorded_status": "not licensed by the weight licence; standalone copyright status uncertain and jurisdiction-dependent"
+      },
+      "parameters_b": 7.24,
+      "permitted_use_basis": "Apache-2.0 section 2 grants a perpetual, worldwide, non-exclusive, royalty-free, irrevocable copyright licence to reproduce, prepare derivative works of and distribute the Work, with no field-of-use restriction. Generation is use of the Work.",
+      "reason": "no samples generated; unused",
+      "redistribution_restrictions": [
+        "Apache-2.0 section 4 applies only if the weights or derivative model artefacts are redistributed (not planned)."
+      ],
+      "retrieved_at": "2026-11-06",
+      "revision": "63a8b081895390a26e140280378bc85ec8bce07a",
+      "revision_last_modified": "2025-07-24T16:57:21.000Z",
+      "status": "withdrawn_no_samples_generated",
+      "use_restrictions": []
+    },
+    {
+      "academic_generation_permitted": true,
+      "access_requirements": "Provider API only; no model weights are downloaded or redistributed.",
+      "active": false,
+      "attribution_requirements": [],
+      "conditions": [
+        "Provider terms were not independently audited.",
+        "Generated text must never be redistributed or published verbatim."
+      ],
+      "confidence": "low",
+      "display_name": "glm-5.3-flash",
+      "gated": false,
+      "generator_id": "glm_53_flash",
+      "licence": {
+        "licence_file_present": false,
+        "name": "Provider API terms",
+        "note": "Provider API terms were not independently audited.",
+        "spdx": "NOASSERTION"
+      },
+      "model_as_served": "glm-5.3-flash",
+      "model_id": "api:glm-5.3-flash",
+      "note": "Provider API terms were not independently audited. The project owner authorised the use of this model for private non-commercial research.",
+      "output_terms": {
+        "assert_copyright": false,
+        "basis": "Provider API terms were not independently audited.",
+        "outputs_licensed": false,
+        "outputs_restricted_by_licence": false,
+        "recorded_status": "not licensed by the provider terms; standalone copyright status uncertain and jurisdiction-dependent"
+      },
+      "permitted_use_basis": "The project owner authorised use for private non-commercial academic research; provider terms were not independently audited.",
+      "reason": "no samples generated; directory name is a leftover",
+      "redistribution_restrictions": [
+        "Generated text is not redistributed or published verbatim."
+      ],
+      "retrieved_at": "2026-11-10",
+      "revision": "b0a4003da14aee5ceacac898f232f36474be6d9b",
+      "status": "withdrawn_no_samples_generated",
+      "use_restrictions": []
+    }
+  ]
 }
