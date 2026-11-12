@@ -12,13 +12,22 @@ legal advice.
 
 ---
 
+## Trained model
+
+The E2-C1 DistilBERT is published on Hugging Face:
+
+**[itsaakif/StopTheCap-E2C1-distilbert](https://huggingface.co/itsaakif/StopTheCap-E2C1-distilbert)**
+
+The model card records the full results, the frozen threshold, the shortcut-gate failure and the
+limitations. It is a research artefact and a documented negative result, not a production detector.
+
 ## Summary
 
 - **E1** (DistilBERT on Ghostbuster) reaches **0.999 in-domain** but only **0.532 ROC-AUC on RAID** - chance.
 - **E2-C1** tested two self-generated corpora. Both reach **1.000 in-domain** and **0.367-0.447 on HC3** / **0.375-0.377 on RAID**, with human false-positive rates of **42-88%**.
 - The corpora were separable by **shortcut features** (word count first, then paragraph and digit density), so the model learned the corpus, not authorship. The failing gate is recorded in the manifests.
 - **One positive result:** a 3-class generator-attribution model separates DeepSeek / Muse Spark / LongCat at **95.1% accuracy, 0.84 macro-F1**.
-- The trained essay detector is published on Hugging Face as a **research artefact, not a usable detector**.
+- The trained essay detector is published on [Hugging Face](https://huggingface.co/itsaakif/StopTheCap-E2C1-distilbert) as a **research artefact, not a usable detector**.
 
 ## Status
 
